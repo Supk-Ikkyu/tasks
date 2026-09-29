@@ -7,6 +7,7 @@ type AuthMode = 'sign-in' | 'sign-up'
 
 export function Login() {
   const [mode, setMode] = useState<AuthMode>('sign-in')
+  const [displayName, setDisplayName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -32,6 +33,10 @@ export function Login() {
     const normalisedEmail = email.trim().toLowerCase()
 
     if (mode === 'sign-up') {
+      if (displayName.trim().length < 2 || displayName.trim().length > 40) {
+        setError('Display name must contain between 2 and 40 characters.')
+        return
+      }
       if (password.length < 8) {
         setError('Password must contain at least 8 characters.')
         return
@@ -57,7 +62,10 @@ export function Login() {
     const { data, error: signUpError } = await supabase!.auth.signUp({
       email: normalisedEmail,
       password,
-      options: { emailRedirectTo: window.location.origin },
+      options: {
+        data: { display_name: displayName.trim() },
+        emailRedirectTo: window.location.origin,
+      },
     })
     setLoading(false)
 
@@ -68,6 +76,7 @@ export function Login() {
 
     if (!data.session) {
       setSuccess('Account created. Please check your email and confirm your address before signing in.')
+      setDisplayName('')
       setPassword('')
       setConfirmPassword('')
     }
@@ -107,6 +116,13 @@ export function Login() {
 
           {error && <ErrorMessage message={error} />}
           {success && <div className="success-message" role="status"><ShieldCheck size={19} /><span>{success}</span></div>}
+
+          {isSignUp && (
+            <label>
+              <span>Display name <small>2–40 characters</small></span>
+              <input type="text" value={displayName} onChange={(event) => setDisplayName(event.target.value)} autoComplete="nickname" minLength={2} maxLength={40} required />
+            </label>
+          )}
 
           <label>
             <span>Email address</span>

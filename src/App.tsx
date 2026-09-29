@@ -65,8 +65,12 @@ export default function App() {
   if (!session) return <Login />
 
   const userId = session.user.id
+  const metadataName = session.user.user_metadata.display_name
+  const displayName = typeof metadataName === 'string' && metadataName.trim()
+    ? metadataName.trim()
+    : (session.user.email?.split('@')[0] || 'Account')
   const page = {
-    dashboard: <Dashboard userId={userId} navigate={setSection} />,
+    dashboard: <Dashboard userId={userId} navigate={setSection} displayName={displayName} />,
     tasks: <Tasks userId={userId} />,
     notes: <Notes userId={userId} />,
     calendar: <Calendar userId={userId} />,
@@ -81,6 +85,13 @@ export default function App() {
       toggleTheme={() => setTheme((value) => value === 'light' ? 'dark' : 'light')}
       onSignOut={() => supabase!.auth.signOut()}
       email={session.user.email || ''}
+      displayName={displayName}
+      onUpdateDisplayName={async (nextName) => {
+        const { error } = await supabase!.auth.updateUser({
+          data: { display_name: nextName.trim() },
+        })
+        return error?.message || null
+      }}
     >
       {page}
     </Layout>

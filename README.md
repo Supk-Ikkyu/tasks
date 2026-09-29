@@ -1,6 +1,6 @@
 # Tasks
 
-A responsive personal workspace for Tasks, Notes, Important Links, and Calendar. It supports multiple private accounts, email/password authentication, and light/dark themes.
+A responsive personal workspace for Tasks, Notes, Important Links, and Calendar. It supports multiple private accounts, display names, email/password authentication, and light/dark themes.
 
 ## Local setup
 
@@ -35,6 +35,8 @@ In Supabase Dashboard:
 4. Under **Authentication > URL Configuration**, set the production Site URL and add both the production URL and `http://localhost:5173` to the allowed redirect URLs.
 
 Anyone who has the website link can request an account. Email confirmation helps ensure that each person owns the address used to register.
+
+New users choose a display name during registration. Existing users can click their account name in the sidebar or the account button in the top bar to set or change it. Display names are stored in Supabase Auth user metadata, so no additional database migration is required.
 
 ## Run and verify
 

@@ -16,6 +16,7 @@ import { ErrorMessage, LoadingState } from '../components/Feedback'
 interface DashboardProps {
   userId: string
   navigate: (section: Section) => void
+  displayName: string
 }
 
 interface Summary {
@@ -27,7 +28,7 @@ interface Summary {
   nextEvent: CalendarEvent | null
 }
 
-export function Dashboard({ userId, navigate }: DashboardProps) {
+export function Dashboard({ userId, navigate, displayName }: DashboardProps) {
   const [summary, setSummary] = useState<Summary | null>(null)
   const [error, setError] = useState('')
 
@@ -70,7 +71,7 @@ export function Dashboard({ userId, navigate }: DashboardProps) {
       <section className="welcome-card">
         <div>
           <p className="eyebrow">Personal overview</p>
-          <h2>{greeting}.</h2>
+          <h2>{greeting}, {displayName}.</h2>
           <p>You have <strong>{summary.pendingTasks} open {summary.pendingTasks === 1 ? 'task' : 'tasks'}</strong> and <strong>{summary.events} upcoming {summary.events === 1 ? 'event' : 'events'}</strong> in the next seven days.</p>
         </div>
         <button className="primary-button" type="button" onClick={() => navigate('tasks')}><Plus size={18} />Add a task</button>

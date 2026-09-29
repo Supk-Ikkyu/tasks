@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useState, type FormEvent, type ReactNode } from 'react'
 import {
   CalendarDays,
   CheckSquare2,
@@ -8,8 +8,11 @@ import {
   Moon,
   NotebookText,
   Sun,
+  UserRound,
 } from 'lucide-react'
 import type { Section } from '../types'
+import { ErrorMessage } from './Feedback'
+import { Modal } from './Modal'
 
 const navigation: Array<{ id: Section; label: string; icon: typeof LayoutDashboard }> = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -26,6 +29,8 @@ interface LayoutProps {
   toggleTheme: () => void
   onSignOut: () => void
   email: string
+  displayName: string
+  onUpdateDisplayName: (displayName: string) => Promise<string | null>
   children: ReactNode
 }
 
@@ -36,17 +41,47 @@ export function Layout({
   toggleTheme,
   onSignOut,
   email,
+  displayName,
+  onUpdateDisplayName,
   children,
 }: LayoutProps) {
+  const [profileOpen, setProfileOpen] = useState(false)
+  const [nameDraft, setNameDraft] = useState(displayName)
+  const [profileError, setProfileError] = useState('')
+  const [profileSaving, setProfileSaving] = useState(false)
   const current = navigation.find((item) => item.id === section)!
-  const accountName = email.split('@')[0] || 'Account'
-  const avatarLetter = accountName.charAt(0).toUpperCase() || 'A'
+  const avatarLetter = displayName.charAt(0).toUpperCase() || 'A'
   const today = new Intl.DateTimeFormat('en-GB', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
     year: 'numeric',
   }).format(new Date())
+
+  function openProfile() {
+    setNameDraft(displayName)
+    setProfileError('')
+    setProfileOpen(true)
+  }
+
+  async function saveProfile(event: FormEvent) {
+    event.preventDefault()
+    const nextName = nameDraft.trim()
+    if (nextName.length < 2 || nextName.length > 40) {
+      setProfileError('Display name must contain between 2 and 40 characters.')
+      return
+    }
+
+    setProfileSaving(true)
+    setProfileError('')
+    const updateError = await onUpdateDisplayName(nextName)
+    setProfileSaving(false)
+    if (updateError) {
+      setProfileError(updateError)
+      return
+    }
+    setProfileOpen(false)
+  }
 
   return (
     <div className="app-shell">
@@ -75,10 +110,10 @@ export function Layout({
         </nav>
 
         <div className="sidebar-footer">
-          <div className="account-summary">
+          <button className="account-summary account-summary-button" type="button" onClick={openProfile}>
             <span className="avatar">{avatarLetter}</span>
-            <div><strong>{accountName}</strong><span>{email}</span></div>
-          </div>
+            <div><strong>{displayName}</strong><span>{email}</span></div>
+          </button>
           <button className="nav-item" type="button" onClick={onSignOut}>
             <LogOut size={19} />
             <span>Sign out</span>
@@ -92,10 +127,16 @@ export function Layout({
             <p className="eyebrow">{today}</p>
             <h1>{current.label}</h1>
           </div>
-          <button className="theme-toggle" type="button" onClick={toggleTheme} aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}>
-            {theme === 'light' ? <Moon size={19} /> : <Sun size={19} />}
-            <span>{theme === 'light' ? 'Dark mode' : 'Light mode'}</span>
-          </button>
+          <div className="topbar-actions">
+            <button className="theme-toggle profile-button" type="button" onClick={openProfile} aria-label="Edit account">
+              <UserRound size={19} />
+              <span>{displayName}</span>
+            </button>
+            <button className="theme-toggle" type="button" onClick={toggleTheme} aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}>
+              {theme === 'light' ? <Moon size={19} /> : <Sun size={19} />}
+              <span>{theme === 'light' ? 'Dark mode' : 'Light mode'}</span>
+            </button>
+          </div>
         </header>
         <main className="content">{children}</main>
       </div>
@@ -118,6 +159,24 @@ export function Layout({
           )
         })}
       </nav>
+
+      <Modal title="Account settings" open={profileOpen} onClose={() => setProfileOpen(false)}>
+        <form className="modal-form" onSubmit={saveProfile}>
+          {profileError && <ErrorMessage message={profileError} />}
+          <label>
+            <span>Display name <small>2–40 characters</small></span>
+            <input type="text" value={nameDraft} onChange={(event) => setNameDraft(event.target.value)} minLength={2} maxLength={40} autoComplete="nickname" required autoFocus />
+          </label>
+          <label>
+            <span>Email address</span>
+            <input type="email" value={email} disabled />
+          </label>
+          <div className="modal-actions">
+            <button className="secondary-button" type="button" onClick={() => setProfileOpen(false)}>Cancel</button>
+            <button className="primary-button" type="submit" disabled={profileSaving}>{profileSaving ? 'Saving…' : 'Save changes'}</button>
+          </div>
+        </form>
+      </Modal>
     </div>
   )
 }
