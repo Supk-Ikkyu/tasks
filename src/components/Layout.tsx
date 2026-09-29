@@ -2,6 +2,7 @@ import { useState, type FormEvent, type ReactNode } from 'react'
 import {
   CalendarDays,
   CheckSquare2,
+  CircleHelp,
   LayoutDashboard,
   Link2,
   LogOut,
@@ -31,6 +32,7 @@ interface LayoutProps {
   email: string
   displayName: string
   onUpdateDisplayName: (displayName: string) => Promise<string | null>
+  onStartTour: () => void
   children: ReactNode
 }
 
@@ -43,6 +45,7 @@ export function Layout({
   email,
   displayName,
   onUpdateDisplayName,
+  onStartTour,
   children,
 }: LayoutProps) {
   const [profileOpen, setProfileOpen] = useState(false)
@@ -91,7 +94,7 @@ export function Layout({
           <span><strong>Tasks</strong></span>
         </button>
 
-        <nav className="side-nav" aria-label="Main navigation">
+        <nav className="side-nav" aria-label="Main navigation" data-tour="main-navigation">
           {navigation.map((item) => {
             const Icon = item.icon
             return (
@@ -127,7 +130,11 @@ export function Layout({
             <p className="eyebrow">{today}</p>
             <h1>{current.label}</h1>
           </div>
-          <div className="topbar-actions">
+          <div className="topbar-actions" id="tour-account-actions">
+            <button className="theme-toggle" type="button" onClick={onStartTour} aria-label="Open getting started guide">
+              <CircleHelp size={19} />
+              <span>Help</span>
+            </button>
             <button className="theme-toggle profile-button" type="button" onClick={openProfile} aria-label="Edit account">
               <UserRound size={19} />
               <span>{displayName}</span>
@@ -141,7 +148,7 @@ export function Layout({
         <main className="content">{children}</main>
       </div>
 
-      <nav className="mobile-nav" aria-label="Mobile navigation">
+      <nav className="mobile-nav" aria-label="Mobile navigation" data-tour="main-navigation">
         {navigation.map((item) => {
           const Icon = item.icon
           return (

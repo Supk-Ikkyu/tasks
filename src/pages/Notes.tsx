@@ -63,7 +63,7 @@ export function Notes({ userId }: { userId: string }) {
     <div className="page-stack">
       <div className="action-row">
         <div className="search-box"><Search size={18} /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search notes" aria-label="Search notes" /></div>
-        <button className="primary-button" type="button" onClick={openCreate}><Plus size={18} />New note</button>
+        <button className="primary-button" id="tour-new-note" type="button" onClick={openCreate}><Plus size={18} />New note</button>
       </div>
       {error && <ErrorMessage message={error} />}
       {loading ? <LoadingState label="Loading notes…" /> : visibleNotes.length === 0 ? (

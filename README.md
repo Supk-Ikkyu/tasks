@@ -38,6 +38,8 @@ Anyone who has the website link can request an account. Email confirmation helps
 
 New users choose a display name during registration. Existing users can click their account name in the sidebar or the account button in the top bar to set or change it. Display names are stored in Supabase Auth user metadata, so no additional database migration is required.
 
+The first sign-in also opens a responsive getting-started guide. Completion is stored as `onboarding_version` in Supabase Auth user metadata, and users can reopen the guide from the Help button at any time. This feature does not require a database migration.
+
 ## Run and verify
 
 ```bash

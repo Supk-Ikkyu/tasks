@@ -105,7 +105,7 @@ export function Calendar({ userId }: { userId: string }) {
 
   return (
     <div className="page-stack">
-      <div className="calendar-actions">
+      <div className="calendar-actions" id="tour-calendar-tools">
         <button className="secondary-button" type="button" onClick={requestNotifications}>
           {notificationPermission === 'granted' ? <BellRing size={18} /> : <Bell size={18} />}
           {notificationPermission === 'granted' ? 'Notifications enabled' : 'Enable notifications'}

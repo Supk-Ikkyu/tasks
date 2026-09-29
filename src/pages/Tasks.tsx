@@ -78,7 +78,7 @@ export function Tasks({ userId }: { userId: string }) {
     <div className="page-stack">
       <div className="action-row">
         <div className="search-box"><Search size={18} /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search tasks" aria-label="Search tasks" /></div>
-        <button className="primary-button" type="button" onClick={openCreate}><Plus size={18} />New task</button>
+        <button className="primary-button" id="tour-new-task" type="button" onClick={openCreate}><Plus size={18} />New task</button>
       </div>
 
       <div className="filter-row" aria-label="Task filters">

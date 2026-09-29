@@ -5,6 +5,7 @@ import { isSupabaseConfigured, supabase } from './lib/supabase'
 import type { Section } from './types'
 import { Layout } from './components/Layout'
 import { LoadingState } from './components/Feedback'
+import { OnboardingTour } from './components/OnboardingTour'
 import { Login } from './pages/Login'
 import { Dashboard } from './pages/Dashboard'
 import { Tasks } from './pages/Tasks'
@@ -33,6 +34,7 @@ export default function App() {
   const [session, setSession] = useState<Session | null>(null)
   const [authLoading, setAuthLoading] = useState(true)
   const [section, setSection] = useState<Section>('dashboard')
+  const [tourOpen, setTourOpen] = useState(false)
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const saved = localStorage.getItem('tasks-theme')
     if (saved === 'light' || saved === 'dark') return saved
@@ -60,6 +62,12 @@ export default function App() {
     return () => listener.subscription.unsubscribe()
   }, [])
 
+  useEffect(() => {
+    if (!session) return
+    const completedVersion = Number(session.user.user_metadata.onboarding_version || 0)
+    if (completedVersion < 1) setTourOpen(true)
+  }, [session])
+
   if (!isSupabaseConfigured) return <SetupRequired />
   if (authLoading) return <div className="center-page"><LoadingState /></div>
   if (!session) return <Login />
@@ -86,6 +94,7 @@ export default function App() {
       onSignOut={() => supabase!.auth.signOut()}
       email={session.user.email || ''}
       displayName={displayName}
+      onStartTour={() => setTourOpen(true)}
       onUpdateDisplayName={async (nextName) => {
         const { error } = await supabase!.auth.updateUser({
           data: { display_name: nextName.trim() },
@@ -94,6 +103,14 @@ export default function App() {
       }}
     >
       {page}
+      <OnboardingTour
+        open={tourOpen}
+        onNavigate={setSection}
+        onComplete={() => {
+          setTourOpen(false)
+          void supabase!.auth.updateUser({ data: { onboarding_version: 1 } })
+        }}
+      />
     </Layout>
   )
 }

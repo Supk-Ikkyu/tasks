@@ -68,7 +68,7 @@ export function Dashboard({ userId, navigate, displayName }: DashboardProps) {
 
   return (
     <div className="dashboard-page">
-      <section className="welcome-card">
+      <section className="welcome-card" id="tour-dashboard-overview">
         <div>
           <p className="eyebrow">Personal overview</p>
           <h2>{greeting}, {displayName}.</h2>
