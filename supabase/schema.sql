@@ -32,6 +32,8 @@ create table if not exists public.tasks (
   completed boolean not null default false,
   priority text not null default 'medium' check (priority in ('low', 'medium', 'high')),
   due_date date,
+  recurrence text not null default 'none' check (recurrence in ('none', 'daily', 'weekly', 'monthly')),
+  recurrence_spawned boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

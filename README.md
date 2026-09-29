@@ -1,6 +1,6 @@
 # Tasks
 
-A responsive personal workspace for Tasks, Notes, Important Links, and Calendar. It supports multiple private accounts, display names, email/password authentication, and light/dark themes.
+A responsive personal workspace for Tasks, Notes, Important Links, and Calendar. It supports multiple private accounts, display names, password recovery, data exports, recurring tasks, and light/dark themes.
 
 ## Local setup
 
@@ -25,6 +25,8 @@ For a new Supabase project, run the complete `supabase/schema.sql` file in **SQL
 
 For a project that previously used the single-account version, run only `supabase/multi_user_migration.sql` once. The migration keeps all existing data and changes Row Level Security so every signed-in user can access only rows whose `user_id` matches their own account.
 
+For an existing multi-user installation, run `supabase/recurring_tasks_migration.sql` once to add the two fields used by recurring tasks. Existing tasks remain unchanged and default to **Does not repeat**.
+
 ## Enable account registration
 
 In Supabase Dashboard:
@@ -38,7 +40,19 @@ Anyone who has the website link can request an account. Email confirmation helps
 
 New users choose a display name during registration. Existing users can click their account name in the sidebar or the account button in the top bar to set or change it. Display names are stored in Supabase Auth user metadata, so no additional database migration is required.
 
-The first sign-in also opens a responsive getting-started guide. Completion is stored as `onboarding_version` in Supabase Auth user metadata, and users can reopen the guide from the Help button at any time. This feature does not require a database migration.
+The first sign-in also opens a responsive getting-started guide. Completion is stored as `onboarding_version` in Supabase Auth user metadata, and users can reopen the guide from the Help button at any time. Version 2 introduces password tools, exports, and recurring tasks. This feature does not require a database migration.
+
+## Passwords and data exports
+
+- Select **Forgot password?** on the sign-in page to request a recovery email.
+- Open **Account settings** to verify the current password and set a new one.
+- Select **Download data** in Account settings to export the signed-in user's tasks, notes, links, and calendar events as JSON.
+
+Password recovery requires the current production URL to be configured under **Authentication > URL Configuration** in Supabase. Without custom SMTP, Supabase's built-in email service is intended for limited testing and may be rate-limited.
+
+## Recurring tasks
+
+Choose Daily, Weekly, or Monthly when creating or editing a task. Recurring tasks require a due date. When an occurrence is completed, the app keeps it as history and creates the next open occurrence. Reopening a completed occurrence does not create a duplicate.
 
 ## Run and verify
 

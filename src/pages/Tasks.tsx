@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
-import { Check, CheckCircle2, Circle, ListFilter, Pencil, Plus, Search, Trash2 } from 'lucide-react'
+import { Check, CheckCircle2, Circle, ListFilter, Pencil, Plus, Repeat2, Search, Trash2 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
-import type { Task, TaskPriority } from '../types'
+import type { Task, TaskPriority, TaskRecurrence } from '../types'
 import { EmptyState, ErrorMessage, LoadingState } from '../components/Feedback'
 import { Modal } from '../components/Modal'
 
 type Filter = 'open' | 'completed' | 'all'
-const blankForm = { title: '', description: '', priority: 'medium' as TaskPriority, due_date: '' }
+const blankForm = { title: '', description: '', priority: 'medium' as TaskPriority, due_date: '', recurrence: 'none' as TaskRecurrence }
 
 export function Tasks({ userId }: { userId: string }) {
   const [tasks, setTasks] = useState<Task[]>([])
@@ -43,12 +43,16 @@ export function Tasks({ userId }: { userId: string }) {
 
   function openEdit(task: Task) {
     setEditing(task)
-    setForm({ title: task.title, description: task.description || '', priority: task.priority, due_date: task.due_date || '' })
+    setForm({ title: task.title, description: task.description || '', priority: task.priority, due_date: task.due_date || '', recurrence: task.recurrence || 'none' })
     setModalOpen(true)
   }
 
   async function saveTask(event: FormEvent) {
     event.preventDefault()
+    if (form.recurrence !== 'none' && !form.due_date) {
+      setError('A recurring task requires a due date.')
+      return
+    }
     setSaving(true)
     setError('')
     const payload = { ...form, title: form.title.trim(), description: form.description.trim(), due_date: form.due_date || null }
@@ -62,9 +66,48 @@ export function Tasks({ userId }: { userId: string }) {
   }
 
   async function toggleTask(task: Task) {
-    setTasks((current) => current.map((item) => item.id === task.id ? { ...item, completed: !item.completed } : item))
-    const { error: requestError } = await supabase!.from('tasks').update({ completed: !task.completed }).eq('id', task.id).eq('user_id', userId)
-    if (requestError) { setError(requestError.message); await loadTasks() }
+    setError('')
+
+    if (task.completed) {
+      setTasks((current) => current.map((item) => item.id === task.id ? { ...item, completed: false } : item))
+      const { error: requestError } = await supabase!.from('tasks').update({ completed: false }).eq('id', task.id).eq('user_id', userId)
+      if (requestError) { setError(requestError.message); await loadTasks() }
+      return
+    }
+
+    const shouldCreateNext = task.recurrence && task.recurrence !== 'none' && task.due_date && !task.recurrence_spawned
+    setTasks((current) => current.map((item) => item.id === task.id ? { ...item, completed: true } : item))
+
+    const { error: completeError } = await supabase!
+      .from('tasks')
+      .update({ completed: true, ...(shouldCreateNext ? { recurrence_spawned: true } : {}) })
+      .eq('id', task.id)
+      .eq('user_id', userId)
+
+    if (completeError) {
+      setError(completeError.message)
+      await loadTasks()
+      return
+    }
+
+    if (shouldCreateNext) {
+      const { error: insertError } = await supabase!.from('tasks').insert({
+        user_id: userId,
+        title: task.title,
+        description: task.description || '',
+        priority: task.priority,
+        due_date: nextRecurringDate(task.due_date!, task.recurrence),
+        recurrence: task.recurrence,
+        recurrence_spawned: false,
+        completed: false,
+      })
+
+      if (insertError) {
+        await supabase!.from('tasks').update({ recurrence_spawned: false }).eq('id', task.id).eq('user_id', userId)
+        setError(`The task was completed, but the next occurrence could not be created: ${insertError.message}`)
+      }
+      await loadTasks()
+    }
   }
 
   async function deleteTask(task: Task) {
@@ -99,7 +142,11 @@ export function Tasks({ userId }: { userId: string }) {
               <div className="task-content">
                 <div className="task-title-row"><h3>{task.title}</h3><span className={`priority-label ${task.priority}`}><span>{task.priority === 'high' ? '!' : task.priority === 'medium' ? '–' : '·'}</span>{task.priority} priority</span></div>
                 {task.description && <p>{task.description}</p>}
-                <div className="task-meta"><span>{task.due_date ? `Due ${formatDate(task.due_date)}` : 'No due date'}</span>{task.completed && <span className="status-text"><Check size={14} />Completed</span>}</div>
+                <div className="task-meta">
+                  <span>{task.due_date ? `Due ${formatDate(task.due_date)}` : 'No due date'}</span>
+                  {task.recurrence && task.recurrence !== 'none' && <span><Repeat2 size={14} />Repeats {task.recurrence}</span>}
+                  {task.completed && <span className="status-text"><Check size={14} />Completed</span>}
+                </div>
               </div>
               <div className="card-actions">
                 <button className="icon-button" type="button" onClick={() => openEdit(task)} aria-label={`Edit ${task.title}`}><Pencil size={17} /></button>
@@ -118,6 +165,15 @@ export function Tasks({ userId }: { userId: string }) {
             <label><span>Priority</span><select value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value as TaskPriority })}><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></label>
             <label><span>Due date <small>Optional</small></span><input type="date" value={form.due_date} onChange={(e) => setForm({ ...form, due_date: e.target.value })} /></label>
           </div>
+          <label>
+            <span>Repeat <small>A due date is required</small></span>
+            <select value={form.recurrence} onChange={(e) => setForm({ ...form, recurrence: e.target.value as TaskRecurrence })}>
+              <option value="none">Does not repeat</option>
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+            </select>
+          </label>
           <div className="modal-actions"><button className="secondary-button" type="button" onClick={() => setModalOpen(false)}>Cancel</button><button className="primary-button" type="submit" disabled={saving}>{saving ? 'Saving…' : editing ? 'Save changes' : 'Add task'}</button></div>
         </form>
       </Modal>
@@ -127,4 +183,21 @@ export function Tasks({ userId }: { userId: string }) {
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(`${value}T00:00:00`))
+}
+
+function nextRecurringDate(value: string, recurrence: TaskRecurrence) {
+  const date = new Date(`${value}T00:00:00`)
+  if (recurrence === 'daily') date.setDate(date.getDate() + 1)
+  if (recurrence === 'weekly') date.setDate(date.getDate() + 7)
+  if (recurrence === 'monthly') {
+    const originalDay = date.getDate()
+    date.setDate(1)
+    date.setMonth(date.getMonth() + 1)
+    const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate()
+    date.setDate(Math.min(originalDay, lastDay))
+  }
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 }

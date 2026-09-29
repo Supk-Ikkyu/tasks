@@ -10,6 +10,7 @@ export interface Note {
 }
 
 export type TaskPriority = 'low' | 'medium' | 'high'
+export type TaskRecurrence = 'none' | 'daily' | 'weekly' | 'monthly'
 
 export interface Task {
   id: string
@@ -19,6 +20,8 @@ export interface Task {
   completed: boolean
   priority: TaskPriority
   due_date: string | null
+  recurrence: TaskRecurrence
+  recurrence_spawned: boolean
   created_at: string
   updated_at: string
 }

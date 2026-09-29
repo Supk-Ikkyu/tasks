@@ -1,9 +1,9 @@
 import { useState, type FormEvent } from 'react'
-import { CheckSquare2, Eye, EyeOff, LockKeyhole, ShieldCheck, UserPlus } from 'lucide-react'
+import { CheckSquare2, Eye, EyeOff, KeyRound, LockKeyhole, ShieldCheck, UserPlus } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { ErrorMessage } from '../components/Feedback'
 
-type AuthMode = 'sign-in' | 'sign-up'
+type AuthMode = 'sign-in' | 'sign-up' | 'forgot-password'
 
 export function Login() {
   const [mode, setMode] = useState<AuthMode>('sign-in')
@@ -31,6 +31,17 @@ export function Login() {
     setSuccess('')
 
     const normalisedEmail = email.trim().toLowerCase()
+
+    if (mode === 'forgot-password') {
+      setLoading(true)
+      const { error: resetError } = await supabase!.auth.resetPasswordForEmail(normalisedEmail, {
+        redirectTo: `${window.location.origin}/?type=recovery`,
+      })
+      setLoading(false)
+      if (resetError) setError(resetError.message)
+      else setSuccess('If an account exists for this address, a password reset link has been sent.')
+      return
+    }
 
     if (mode === 'sign-up') {
       if (displayName.trim().length < 2 || displayName.trim().length > 40) {
@@ -83,6 +94,7 @@ export function Login() {
   }
 
   const isSignUp = mode === 'sign-up'
+  const isForgotPassword = mode === 'forgot-password'
 
   return (
     <div className="login-page">
@@ -101,16 +113,16 @@ export function Login() {
 
       <section className="login-panel">
         <form className="login-form" onSubmit={handleSubmit}>
-          <div className="auth-tabs" role="tablist" aria-label="Account access">
+          <div className={`auth-tabs${isForgotPassword ? ' hidden' : ''}`} role="tablist" aria-label="Account access">
             <button type="button" role="tab" aria-selected={!isSignUp} className={!isSignUp ? 'active' : ''} onClick={() => changeMode('sign-in')}>Sign in</button>
             <button type="button" role="tab" aria-selected={isSignUp} className={isSignUp ? 'active' : ''} onClick={() => changeMode('sign-up')}>Create account</button>
           </div>
 
           <div className="form-heading">
-            <span className="form-icon">{isSignUp ? <UserPlus size={22} /> : <LockKeyhole size={22} />}</span>
+            <span className="form-icon">{isForgotPassword ? <KeyRound size={22} /> : isSignUp ? <UserPlus size={22} /> : <LockKeyhole size={22} />}</span>
             <div>
-              <h2>{isSignUp ? 'Create your account' : 'Welcome back'}</h2>
-              <p>{isSignUp ? 'Create a private workspace of your own.' : 'Sign in to continue to your workspace.'}</p>
+              <h2>{isForgotPassword ? 'Reset your password' : isSignUp ? 'Create your account' : 'Welcome back'}</h2>
+              <p>{isForgotPassword ? 'Enter your email address to receive a reset link.' : isSignUp ? 'Create a private workspace of your own.' : 'Sign in to continue to your workspace.'}</p>
             </div>
           </div>
 
@@ -129,7 +141,7 @@ export function Login() {
             <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" required />
           </label>
 
-          <label>
+          {!isForgotPassword && <label>
             <span>Password {isSignUp && <small>At least 8 characters</small>}</span>
             <div className="password-field">
               <input
@@ -144,7 +156,7 @@ export function Login() {
                 {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
               </button>
             </div>
-          </label>
+          </label>}
 
           {isSignUp && (
             <label>
@@ -154,8 +166,15 @@ export function Login() {
           )}
 
           <button className="primary-button full-width" type="submit" disabled={loading}>
-            {loading ? (isSignUp ? 'Creating account…' : 'Signing in…') : (isSignUp ? 'Create account' : 'Sign in')}
+            {loading
+              ? (isForgotPassword ? 'Sending reset link…' : isSignUp ? 'Creating account…' : 'Signing in…')
+              : (isForgotPassword ? 'Send reset link' : isSignUp ? 'Create account' : 'Sign in')}
           </button>
+          {isForgotPassword ? (
+            <button className="text-button auth-link" type="button" onClick={() => changeMode('sign-in')}>Back to sign in</button>
+          ) : !isSignUp && (
+            <button className="text-button auth-link" type="button" onClick={() => changeMode('forgot-password')}>Forgot password?</button>
+          )}
         </form>
       </section>
     </div>

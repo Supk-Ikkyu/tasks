@@ -7,6 +7,7 @@ import { Layout } from './components/Layout'
 import { LoadingState } from './components/Feedback'
 import { OnboardingTour } from './components/OnboardingTour'
 import { Login } from './pages/Login'
+import { PasswordRecovery } from './pages/PasswordRecovery'
 import { Dashboard } from './pages/Dashboard'
 import { Tasks } from './pages/Tasks'
 import { Notes } from './pages/Notes'
@@ -35,6 +36,7 @@ export default function App() {
   const [authLoading, setAuthLoading] = useState(true)
   const [section, setSection] = useState<Section>('dashboard')
   const [tourOpen, setTourOpen] = useState(false)
+  const [passwordRecovery, setPasswordRecovery] = useState(() => new URLSearchParams(window.location.search).get('type') === 'recovery' || window.location.hash.includes('type=recovery'))
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const saved = localStorage.getItem('tasks-theme')
     if (saved === 'light' || saved === 'dark') return saved
@@ -55,8 +57,9 @@ export default function App() {
       setSession(data.session)
       setAuthLoading(false)
     })
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+    const { data: listener } = supabase.auth.onAuthStateChange((event, nextSession) => {
       setSession(nextSession)
+      if (event === 'PASSWORD_RECOVERY') setPasswordRecovery(true)
       setAuthLoading(false)
     })
     return () => listener.subscription.unsubscribe()
@@ -65,12 +68,13 @@ export default function App() {
   useEffect(() => {
     if (!session) return
     const completedVersion = Number(session.user.user_metadata.onboarding_version || 0)
-    if (completedVersion < 1) setTourOpen(true)
+    if (completedVersion < 2) setTourOpen(true)
   }, [session])
 
   if (!isSupabaseConfigured) return <SetupRequired />
   if (authLoading) return <div className="center-page"><LoadingState /></div>
   if (!session) return <Login />
+  if (passwordRecovery) return <PasswordRecovery onComplete={() => setPasswordRecovery(false)} />
 
   const userId = session.user.id
   const metadataName = session.user.user_metadata.display_name
@@ -101,6 +105,45 @@ export default function App() {
         })
         return error?.message || null
       }}
+      onChangePassword={async (currentPassword, newPassword) => {
+        const email = session.user.email
+        if (!email) return 'No email address is associated with this account.'
+        const { error: verificationError } = await supabase!.auth.signInWithPassword({
+          email,
+          password: currentPassword,
+        })
+        if (verificationError) return 'The current password is incorrect.'
+        const { error: updateError } = await supabase!.auth.updateUser({ password: newPassword })
+        return updateError?.message || null
+      }}
+      onExportData={async () => {
+        const tables = ['tasks', 'notes', 'important_links', 'calendar_events'] as const
+        const results = await Promise.all(tables.map((table) =>
+          supabase!.from(table).select('*').eq('user_id', userId),
+        ))
+        const failed = results.find((result) => result.error)
+        if (failed?.error) return failed.error.message
+
+        const exportPayload = {
+          schema_version: 1,
+          exported_at: new Date().toISOString(),
+          account: { email: session.user.email || '', display_name: displayName },
+          tasks: results[0].data || [],
+          notes: results[1].data || [],
+          important_links: results[2].data || [],
+          calendar_events: results[3].data || [],
+        }
+        const blob = new Blob([JSON.stringify(exportPayload, null, 2)], { type: 'application/json' })
+        const downloadUrl = URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = downloadUrl
+        link.download = `tasks-export-${new Date().toISOString().slice(0, 10)}.json`
+        document.body.appendChild(link)
+        link.click()
+        link.remove()
+        URL.revokeObjectURL(downloadUrl)
+        return null
+      }}
     >
       {page}
       <OnboardingTour
@@ -108,7 +151,7 @@ export default function App() {
         onNavigate={setSection}
         onComplete={() => {
           setTourOpen(false)
-          void supabase!.auth.updateUser({ data: { onboarding_version: 1 } })
+          void supabase!.auth.updateUser({ data: { onboarding_version: 2 } })
         }}
       />
     </Layout>

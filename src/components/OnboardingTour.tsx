@@ -12,7 +12,7 @@ interface TourStep {
 const steps: TourStep[] = [
   {
     title: 'Welcome to Tasks',
-    detail: 'This short guide will introduce the essential parts of your private workspace.',
+    detail: 'This updated guide covers the essential tools in your private workspace, including repeating tasks, account security, and data exports.',
     section: 'dashboard',
   },
   {
@@ -23,7 +23,7 @@ const steps: TourStep[] = [
   },
   {
     title: 'Create and organise tasks',
-    detail: 'Add a task, choose its priority and due date, then mark it complete when your work is finished.',
+    detail: 'Add a priority and due date, or choose Daily, Weekly, or Monthly repeat. Completing a repeating task creates its next occurrence and preserves the completed one.',
     section: 'tasks',
     target: '#tour-new-task',
   },
@@ -46,8 +46,8 @@ const steps: TourStep[] = [
     target: '[data-tour="main-navigation"]',
   },
   {
-    title: 'Make the workspace yours',
-    detail: 'Change your display name, switch between light and dark mode, or select Help whenever you want to view this guide again.',
+    title: 'Account security and exports',
+    detail: 'Open your account settings to change your display name or password and download a JSON copy of your data. Use Forgot password on the sign-in page if you lose access, and select Help to replay this guide.',
     section: 'dashboard',
     target: '#tour-account-actions',
   },
