@@ -62,7 +62,6 @@ export function Dashboard({ userId, navigate }: DashboardProps) {
   if (error) return <ErrorMessage message={error} />
   if (!summary) return <LoadingState label="Preparing your overview…" />
 
-  const firstName = 'Ikkyu'
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening'
 
@@ -71,7 +70,7 @@ export function Dashboard({ userId, navigate }: DashboardProps) {
       <section className="welcome-card">
         <div>
           <p className="eyebrow">Personal overview</p>
-          <h2>{greeting}, {firstName}.</h2>
+          <h2>{greeting}.</h2>
           <p>You have <strong>{summary.pendingTasks} open {summary.pendingTasks === 1 ? 'task' : 'tasks'}</strong> and <strong>{summary.events} upcoming {summary.events === 1 ? 'event' : 'events'}</strong> in the next seven days.</p>
         </div>
         <button className="primary-button" type="button" onClick={() => navigate('tasks')}><Plus size={18} />Add a task</button>

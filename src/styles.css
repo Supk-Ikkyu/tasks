@@ -17,6 +17,8 @@
   --accent: #c6914d;
   --danger: #9b3e45;
   --danger-soft: #f8e8e7;
+  --success: #326557;
+  --success-soft: #e6f2ed;
   --shadow: 0 14px 36px rgba(47, 42, 35, 0.07);
   --radius: 18px;
 }
@@ -37,6 +39,8 @@
   --accent: #e6c58d;
   --danger: #f0a3a8;
   --danger-soft: #4a2b31;
+  --success: #9bd8c3;
+  --success-soft: #203f38;
   --shadow: 0 14px 36px rgba(0, 0, 0, 0.18);
 }
 
@@ -245,10 +249,16 @@ input:focus, textarea:focus, select:focus { border-color: var(--primary); outlin
 .privacy-note { display: flex; width: max-content; max-width: 100%; align-items: center; gap: 10px; padding: 11px 14px; border: 1px solid rgba(37, 48, 68, 0.16); border-radius: 12px; background: rgba(255, 255, 255, 0.28); font-size: 0.82rem; }
 .login-panel { display: grid; place-items: center; padding: 32px; background: var(--surface); }
 .login-form { width: min(430px, 100%); }
+.auth-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg); }
+.auth-tabs button { min-height: 39px; padding: 8px 12px; border: 0; border-radius: 8px; background: transparent; color: var(--muted); font-size: 0.84rem; font-weight: 700; cursor: pointer; }
+.auth-tabs button.active { background: var(--surface); color: var(--text); box-shadow: 0 2px 9px rgba(32, 48, 68, 0.08); }
 .form-heading { display: flex; align-items: center; gap: 13px; margin-bottom: 10px; }
 .form-heading h2 { margin: 0 0 4px; font-size: 1.55rem; }
 .form-heading p { margin: 0; color: var(--muted); font-size: 0.86rem; }
 .form-icon { display: grid; width: 46px; height: 46px; flex: 0 0 auto; place-items: center; border-radius: 13px; background: var(--primary-soft); color: var(--primary); }
+.login-form label small { color: var(--muted); font-weight: 500; }
+.success-message { display: flex; align-items: flex-start; gap: 9px; padding: 12px 14px; border: 1px solid color-mix(in srgb, var(--success) 35%, var(--border)); border-radius: 11px; background: var(--success-soft); color: var(--success); font-size: 0.84rem; line-height: 1.45; }
+.success-message svg { flex: 0 0 auto; margin-top: 1px; }
 .password-field { position: relative; }
 .password-field input { padding-right: 48px; }
 .password-field button { position: absolute; top: 3px; right: 4px; display: grid; width: 38px; height: 38px; place-items: center; border: 0; background: transparent; color: var(--muted); cursor: pointer; }

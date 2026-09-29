@@ -39,6 +39,8 @@ export function Layout({
   children,
 }: LayoutProps) {
   const current = navigation.find((item) => item.id === section)!
+  const accountName = email.split('@')[0] || 'Account'
+  const avatarLetter = accountName.charAt(0).toUpperCase() || 'A'
   const today = new Intl.DateTimeFormat('en-GB', {
     weekday: 'long',
     day: 'numeric',
@@ -51,7 +53,7 @@ export function Layout({
       <aside className="sidebar">
         <button className="brand" type="button" onClick={() => setSection('dashboard')}>
           <span className="brand-mark"><CheckSquare2 size={22} /></span>
-          <span><strong>Ikkyu</strong> Tasks</span>
+          <span><strong>Tasks</strong></span>
         </button>
 
         <nav className="side-nav" aria-label="Main navigation">
@@ -74,8 +76,8 @@ export function Layout({
 
         <div className="sidebar-footer">
           <div className="account-summary">
-            <span className="avatar">I</span>
-            <div><strong>Ikkyu</strong><span>{email}</span></div>
+            <span className="avatar">{avatarLetter}</span>
+            <div><strong>{accountName}</strong><span>{email}</span></div>
           </div>
           <button className="nav-item" type="button" onClick={onSignOut}>
             <LogOut size={19} />

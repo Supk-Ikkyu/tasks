@@ -34,14 +34,14 @@ export default function App() {
   const [authLoading, setAuthLoading] = useState(true)
   const [section, setSection] = useState<Section>('dashboard')
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    const saved = localStorage.getItem('ikkyu-theme')
+    const saved = localStorage.getItem('tasks-theme')
     if (saved === 'light' || saved === 'dark') return saved
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
   })
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme
-    localStorage.setItem('ikkyu-theme', theme)
+    localStorage.setItem('tasks-theme', theme)
   }, [theme])
 
   useEffect(() => {

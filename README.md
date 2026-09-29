@@ -1,132 +1,69 @@
-# Ikkyu Tasks
+# Tasks
 
-เว็บส่วนตัวสำหรับจัดการ Tasks, Notes, Important Links และ Calendar รองรับโทรศัพท์, iPad และ PC พร้อม Light/Dark mode และ Supabase authentication
+A responsive personal workspace for Tasks, Notes, Important Links, and Calendar. It supports multiple private accounts, email/password authentication, and light/dark themes.
 
-## สิ่งที่ต้องมี
+## Local setup
 
-- Node.js LTS
-- Git
-- บัญชี GitHub
-- บัญชี Supabase
-- บัญชี Render
-
-## 1. ติดตั้งโปรเจกต์
-
-เปิดโฟลเดอร์นี้ด้วย VS Code แล้วเปิด Terminal:
+Requirements: Node.js, Git, a Supabase project, and a Render account.
 
 ```bash
 npm install
 ```
 
-## 2. สร้าง Supabase Project
-
-1. เข้า https://supabase.com/dashboard
-2. กด **New project**
-3. ตั้งชื่อ `ikkyu-tasks`
-4. สร้าง Database password ใหม่ที่ไม่ซ้ำกับบัญชีอื่น
-5. เลือก region ที่อยู่ใกล้ประเทศไทย
-6. รอให้ Project สร้างเสร็จ
-
-## 3. สร้างฐานข้อมูล
-
-1. ใน Supabase เลือก **SQL Editor**
-2. กด **New query**
-3. เปิดไฟล์ `supabase/schema.sql`
-4. คัดลอกเนื้อหาทั้งหมดไปวาง
-5. กด **Run**
-
-ไฟล์นี้สร้างตารางและ Row Level Security ซึ่งจำกัดข้อมูลไว้ที่ `supk.ikkyu@gmail.com`
-
-## 4. สร้างบัญชี Login เพียงบัญชีเดียว
-
-1. ไปที่ **Authentication > Users**
-2. กด **Add user > Create new user**
-3. ใช้อีเมล `supk.ikkyu@gmail.com`
-4. ตั้งรหัสผ่านใหม่ที่ไม่เคยส่งให้บุคคลอื่น
-5. เปิด **Auto Confirm User**
-6. สร้างผู้ใช้
-
-จากนั้นไปที่ **Authentication > Providers > Email** และปิดตัวเลือกที่อนุญาตให้บุคคลทั่วไปสมัครสมาชิก หาก Dashboard เวอร์ชันที่ใช้อยู่แสดงตัวเลือกนี้
-
-## 5. สร้างไฟล์ Environment
-
-คัดลอก `.env.example` แล้วตั้งชื่อสำเนาว่า `.env`
-
-ใน Supabase ไปที่ **Project Settings > API** แล้วคัดลอก:
-
-- Project URL
-- Publishable/anon key
-
-ใส่ลงใน `.env`:
+Copy `.env.example` to `.env` and enter the project values from Supabase:
 
 ```env
 VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-key
-VITE_ALLOWED_EMAIL=supk.ikkyu@gmail.com
+VITE_SUPABASE_ANON_KEY=your-publishable-or-anon-key
 ```
 
-ค่า anon/publishable key สามารถใช้ใน frontend ได้เมื่อเปิด RLS ถูกต้องแล้ว แต่ห้ามนำ `service_role` key มาใส่ในเว็บเด็ดขาด
+Never put a Supabase `service_role` key in this frontend project.
 
-## 6. เปิดเว็บบนเครื่อง
+## Database
+
+For a new Supabase project, run the complete `supabase/schema.sql` file in **SQL Editor**.
+
+For a project that previously used the single-account version, run only `supabase/multi_user_migration.sql` once. The migration keeps all existing data and changes Row Level Security so every signed-in user can access only rows whose `user_id` matches their own account.
+
+## Enable account registration
+
+In Supabase Dashboard:
+
+1. Open **Authentication > Providers > Email**.
+2. Enable email sign-ups.
+3. Keep **Confirm email** enabled.
+4. Under **Authentication > URL Configuration**, set the production Site URL and add both the production URL and `http://localhost:5173` to the allowed redirect URLs.
+
+Anyone who has the website link can request an account. Email confirmation helps ensure that each person owns the address used to register.
+
+## Run and verify
 
 ```bash
 npm run dev
-```
-
-เปิด URL ที่ Terminal แสดง โดยปกติคือ:
-
-```text
-http://localhost:5173
-```
-
-## 7. ตรวจสอบก่อนอัปโหลด
-
-```bash
 npm run build
 ```
 
-ถ้าสำเร็จ จะมีโฟลเดอร์ `dist`
+Test with two different accounts and confirm that a task created by one account is not visible to the other.
 
-## 8. อัปโหลดขึ้น GitHub
+## Deploy on Render
 
-สร้าง repository ชื่อ `ikkyu-tasks` และตั้งเป็น **Private** จากนั้นรัน:
+- Build command: `npm ci && npm run build`
+- Publish directory: `dist`
+- Environment variables: `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`
+- Rewrite rule: `/*` to `/index.html`
+
+The previous `VITE_ALLOWED_EMAIL` variable is no longer used and may be removed from Render and `.env`.
+
+## Rename the repository and Render service
+
+The application name shown in the interface and browser is **Tasks**. The GitHub repository may be renamed to `tasks`. After renaming it, update the local remote URL:
 
 ```bash
-git init
-git add .
-git commit -m "Initial Ikkyu Tasks application"
-git branch -M main
-git remote add origin https://github.com/YOUR_USERNAME/ikkyu-tasks.git
-git push -u origin main
+git remote set-url origin https://github.com/YOUR_USERNAME/tasks.git
 ```
 
-ไฟล์ `.env` ถูกป้องกันไม่ให้อัปโหลดโดย `.gitignore`
+The Render service may also be renamed. If `tasks.onrender.com` is unavailable, use a unique service name such as `tasks-workspace` and then update Supabase's Site URL and redirect URLs to the new address.
 
-## 9. Deploy บน Render
+## Calendar notifications
 
-1. Render Dashboard > **New > Static Site**
-2. เชื่อม repository `ikkyu-tasks`
-3. Build Command: `npm ci && npm run build`
-4. Publish Directory: `dist`
-5. เพิ่ม Environment Variables ทั้งสามค่าจากไฟล์ `.env`
-6. กด Deploy
-
-สำหรับ Single Page Application ให้เพิ่ม Rewrite rule:
-
-```text
-Source: /*
-Destination: /index.html
-Action: Rewrite
-```
-
-## การแจ้งเตือน
-
-Calendar สามารถแสดง browser notification เมื่อเว็บไซต์ยังเปิดอยู่และได้รับอนุญาตจาก browser แล้ว การแจ้งเตือนขณะปิดเว็บไซต์ต้องเพิ่ม Web Push และ server-side scheduler ในเวอร์ชันถัดไป
-
-## แผนต่อยอด
-
-- Google Calendar OAuth sync
-- Background push notifications
-- OpenAI API สำหรับแนะนำตารางและแบ่งงาน
-
-API keys ของ Google, OpenAI หรือ `service_role` ต้องเก็บฝั่ง server เท่านั้น ห้ามใช้ตัวแปรที่ขึ้นต้นด้วย `VITE_`
+Calendar notifications work while the website is open and browser notification permission has been granted. Notifications while the site is closed require a future Web Push and server-side scheduler implementation.

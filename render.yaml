@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: ikkyu-tasks
+    name: tasks
     runtime: static
     buildCommand: npm ci && npm run build
     staticPublishPath: ./dist
