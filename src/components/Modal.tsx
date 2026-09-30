@@ -6,15 +6,16 @@ interface ModalProps {
   open: boolean
   onClose: () => void
   children: ReactNode
+  className?: string
 }
 
-export function Modal({ title, open, onClose, children }: ModalProps) {
+export function Modal({ title, open, onClose, children, className = '' }: ModalProps) {
   if (!open) return null
 
   return (
     <div className="modal-backdrop" role="presentation" onMouseDown={onClose}>
       <section
-        className="modal-card"
+        className={`modal-card${className ? ` ${className}` : ''}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"

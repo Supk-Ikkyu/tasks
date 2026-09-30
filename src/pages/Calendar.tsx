@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import type { CalendarEvent } from '../types'
 import { EmptyState, ErrorMessage, LoadingState } from '../components/Feedback'
 import { Modal } from '../components/Modal'
+import { DeleteConfirmation } from '../components/DeleteConfirmation'
 
 const blankForm = { title: '', description: '', start_at: '', end_at: '', reminder_minutes: '15' }
 
@@ -17,6 +18,8 @@ export function Calendar({ userId }: { userId: string }) {
   const [editing, setEditing] = useState<CalendarEvent | null>(null)
   const [form, setForm] = useState(blankForm)
   const [saving, setSaving] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<CalendarEvent | null>(null)
+  const [deleting, setDeleting] = useState(false)
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>(() => 'Notification' in window ? Notification.permission : 'denied')
 
   const loadEvents = useCallback(async () => {
@@ -83,11 +86,19 @@ export function Calendar({ userId }: { userId: string }) {
     else { setModalOpen(false); setSelectedDate(toDateKey(start)); await loadEvents() }
   }
 
-  async function deleteEvent(event: CalendarEvent) {
-    if (!window.confirm(`Delete “${event.title}”?`)) return
-    const { error: requestError } = await supabase!.from('calendar_events').delete().eq('id', event.id).eq('user_id', userId)
-    if (requestError) setError(requestError.message)
-    else setEvents((current) => current.filter((item) => item.id !== event.id))
+  async function confirmDeleteEvent() {
+    if (!deleteTarget) return
+    setDeleting(true)
+    const { error: requestError } = await supabase!.from('calendar_events').delete().eq('id', deleteTarget.id).eq('user_id', userId)
+    setDeleting(false)
+    if (requestError) {
+      setError(requestError.message)
+      setDeleteTarget(null)
+    }
+    else {
+      setEvents((current) => current.filter((item) => item.id !== deleteTarget.id))
+      setDeleteTarget(null)
+    }
   }
 
   async function requestNotifications() {
@@ -150,7 +161,7 @@ export function Calendar({ userId }: { userId: string }) {
                     <h3>{event.title}</h3>
                     {event.description && <p>{event.description}</p>}
                     {event.reminder_minutes !== null && <small><Bell size={14} />Reminder {event.reminder_minutes} minutes before</small>}
-                    <div className="card-actions"><button className="icon-button" type="button" onClick={() => openEdit(event)} aria-label={`Edit ${event.title}`}><Pencil size={17} /></button><button className="icon-button danger" type="button" onClick={() => deleteEvent(event)} aria-label={`Delete ${event.title}`}><Trash2 size={17} /></button></div>
+                    <div className="card-actions"><button className="icon-button" type="button" onClick={() => openEdit(event)} aria-label={`Edit ${event.title}`}><Pencil size={17} /></button><button className="icon-button danger" type="button" onClick={() => setDeleteTarget(event)} aria-label={`Delete ${event.title}`}><Trash2 size={17} /></button></div>
                   </article>
                 ))}
               </div>
@@ -168,6 +179,7 @@ export function Calendar({ userId }: { userId: string }) {
           <div className="modal-actions"><button className="secondary-button" type="button" onClick={() => setModalOpen(false)}>Cancel</button><button className="primary-button" type="submit" disabled={saving}>{saving ? 'Saving…' : editing ? 'Save changes' : 'Add event'}</button></div>
         </form>
       </Modal>
+      <DeleteConfirmation open={Boolean(deleteTarget)} itemType="event" itemName={deleteTarget?.title || ''} deleting={deleting} onCancel={() => setDeleteTarget(null)} onConfirm={confirmDeleteEvent} />
     </div>
   )
 }

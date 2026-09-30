@@ -230,6 +230,7 @@ code { padding: 0.14em 0.38em; border: 1px solid var(--border); border-radius: 6
 
 .modal-backdrop { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 20px; background: rgba(13, 20, 29, 0.58); backdrop-filter: blur(5px); }
 .modal-card { width: min(600px, 100%); max-height: calc(100vh - 40px); overflow: auto; padding: 22px; border: 1px solid var(--border); border-radius: 18px; background: var(--surface); box-shadow: 0 28px 80px rgba(0, 0, 0, 0.22); }
+.modal-card.delete-dialog { width: min(460px, 100%); }
 .modal-header { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 20px; }
 .modal-header h2 { margin: 0; font-size: 1.25rem; }
 .modal-form, .login-form { display: grid; gap: 17px; }
@@ -244,6 +245,14 @@ input:disabled { cursor: not-allowed; opacity: 0.68; }
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
 .large-textarea { min-height: 230px; }
 .modal-actions { display: flex; justify-content: flex-end; gap: 9px; padding-top: 4px; }
+.delete-confirmation { display: grid; gap: 18px; }
+.delete-confirmation-icon { display: grid; width: 48px; height: 48px; place-items: center; border-radius: 14px; background: var(--danger-soft); color: var(--danger); }
+.delete-confirmation-copy p { margin-bottom: 12px; color: var(--muted); font-size: 0.88rem; line-height: 1.55; }
+.delete-confirmation-copy strong { display: block; overflow: hidden; padding: 12px 14px; border: 1px solid color-mix(in srgb, var(--danger) 28%, var(--border)); border-radius: 11px; background: var(--danger-soft); color: var(--text); font-size: 0.9rem; text-overflow: ellipsis; white-space: nowrap; }
+.delete-confirm-button { display: inline-flex; min-height: 43px; align-items: center; justify-content: center; gap: 8px; padding: 10px 16px; border: 1px solid var(--danger); border-radius: 11px; background: var(--danger); color: #fff; font-weight: 700; cursor: pointer; }
+:root[data-theme="dark"] .delete-confirm-button { color: #231316; }
+.delete-confirm-button:hover { filter: brightness(0.92); transform: translateY(-1px); }
+.delete-confirm-button:disabled { cursor: wait; opacity: 0.65; filter: none; transform: none; }
 .account-settings-stack { display: grid; gap: 20px; }
 .account-section { display: grid; gap: 15px; padding-top: 20px; border-top: 1px solid var(--border); }
 .account-section:first-of-type { padding-top: 0; border-top: 0; }

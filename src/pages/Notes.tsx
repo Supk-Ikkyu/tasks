@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import type { Note } from '../types'
 import { EmptyState, ErrorMessage, LoadingState } from '../components/Feedback'
 import { Modal } from '../components/Modal'
+import { DeleteConfirmation } from '../components/DeleteConfirmation'
 
 export function Notes({ userId }: { userId: string }) {
   const [notes, setNotes] = useState<Note[]>([])
@@ -14,6 +15,8 @@ export function Notes({ userId }: { userId: string }) {
   const [editing, setEditing] = useState<Note | null>(null)
   const [form, setForm] = useState({ title: '', content: '' })
   const [saving, setSaving] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<Note | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   const loadNotes = useCallback(async () => {
     const { data, error: requestError } = await supabase!.from('notes').select('*').eq('user_id', userId).order('updated_at', { ascending: false })
@@ -52,11 +55,19 @@ export function Notes({ userId }: { userId: string }) {
     else { setModalOpen(false); await loadNotes() }
   }
 
-  async function deleteNote(note: Note) {
-    if (!window.confirm(`Delete “${note.title}”?`)) return
-    const { error: requestError } = await supabase!.from('notes').delete().eq('id', note.id).eq('user_id', userId)
-    if (requestError) setError(requestError.message)
-    else setNotes((current) => current.filter((item) => item.id !== note.id))
+  async function confirmDeleteNote() {
+    if (!deleteTarget) return
+    setDeleting(true)
+    const { error: requestError } = await supabase!.from('notes').delete().eq('id', deleteTarget.id).eq('user_id', userId)
+    setDeleting(false)
+    if (requestError) {
+      setError(requestError.message)
+      setDeleteTarget(null)
+    }
+    else {
+      setNotes((current) => current.filter((item) => item.id !== deleteTarget.id))
+      setDeleteTarget(null)
+    }
   }
 
   return (
@@ -72,7 +83,7 @@ export function Notes({ userId }: { userId: string }) {
         <div className="note-grid">
           {visibleNotes.map((note) => (
             <article className="note-card" key={note.id}>
-              <div className="note-top"><span className="note-icon"><FileText size={19} /></span><div className="card-actions"><button className="icon-button" type="button" onClick={() => openEdit(note)} aria-label={`Edit ${note.title}`}><Pencil size={17} /></button><button className="icon-button danger" type="button" onClick={() => deleteNote(note)} aria-label={`Delete ${note.title}`}><Trash2 size={17} /></button></div></div>
+              <div className="note-top"><span className="note-icon"><FileText size={19} /></span><div className="card-actions"><button className="icon-button" type="button" onClick={() => openEdit(note)} aria-label={`Edit ${note.title}`}><Pencil size={17} /></button><button className="icon-button danger" type="button" onClick={() => setDeleteTarget(note)} aria-label={`Delete ${note.title}`}><Trash2 size={17} /></button></div></div>
               <button className="note-body" type="button" onClick={() => openEdit(note)}><h3>{note.title}</h3><p>{note.content || 'No additional content.'}</p></button>
               <small>Updated {formatUpdated(note.updated_at)}</small>
             </article>
@@ -87,6 +98,7 @@ export function Notes({ userId }: { userId: string }) {
           <div className="modal-actions"><button className="secondary-button" type="button" onClick={() => setModalOpen(false)}>Cancel</button><button className="primary-button" type="submit" disabled={saving}>{saving ? 'Saving…' : editing ? 'Save changes' : 'Create note'}</button></div>
         </form>
       </Modal>
+      <DeleteConfirmation open={Boolean(deleteTarget)} itemType="note" itemName={deleteTarget?.title || ''} deleting={deleting} onCancel={() => setDeleteTarget(null)} onConfirm={confirmDeleteNote} />
     </div>
   )
 }

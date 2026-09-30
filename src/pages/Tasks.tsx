@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import type { Task, TaskPriority, TaskRecurrence } from '../types'
 import { EmptyState, ErrorMessage, LoadingState } from '../components/Feedback'
 import { Modal } from '../components/Modal'
+import { DeleteConfirmation } from '../components/DeleteConfirmation'
 
 type Filter = 'open' | 'completed' | 'all'
 const blankForm = { title: '', description: '', priority: 'medium' as TaskPriority, due_date: '', recurrence: 'none' as TaskRecurrence }
@@ -18,6 +19,8 @@ export function Tasks({ userId }: { userId: string }) {
   const [editing, setEditing] = useState<Task | null>(null)
   const [form, setForm] = useState(blankForm)
   const [saving, setSaving] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<Task | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   const loadTasks = useCallback(async () => {
     setError('')
@@ -110,11 +113,19 @@ export function Tasks({ userId }: { userId: string }) {
     }
   }
 
-  async function deleteTask(task: Task) {
-    if (!window.confirm(`Delete “${task.title}”?`)) return
-    const { error: requestError } = await supabase!.from('tasks').delete().eq('id', task.id).eq('user_id', userId)
-    if (requestError) setError(requestError.message)
-    else setTasks((current) => current.filter((item) => item.id !== task.id))
+  async function confirmDeleteTask() {
+    if (!deleteTarget) return
+    setDeleting(true)
+    const { error: requestError } = await supabase!.from('tasks').delete().eq('id', deleteTarget.id).eq('user_id', userId)
+    setDeleting(false)
+    if (requestError) {
+      setError(requestError.message)
+      setDeleteTarget(null)
+    }
+    else {
+      setTasks((current) => current.filter((item) => item.id !== deleteTarget.id))
+      setDeleteTarget(null)
+    }
   }
 
   return (
@@ -150,7 +161,7 @@ export function Tasks({ userId }: { userId: string }) {
               </div>
               <div className="card-actions">
                 <button className="icon-button" type="button" onClick={() => openEdit(task)} aria-label={`Edit ${task.title}`}><Pencil size={17} /></button>
-                <button className="icon-button danger" type="button" onClick={() => deleteTask(task)} aria-label={`Delete ${task.title}`}><Trash2 size={17} /></button>
+                <button className="icon-button danger" type="button" onClick={() => setDeleteTarget(task)} aria-label={`Delete ${task.title}`}><Trash2 size={17} /></button>
               </div>
             </article>
           ))}
@@ -177,6 +188,7 @@ export function Tasks({ userId }: { userId: string }) {
           <div className="modal-actions"><button className="secondary-button" type="button" onClick={() => setModalOpen(false)}>Cancel</button><button className="primary-button" type="submit" disabled={saving}>{saving ? 'Saving…' : editing ? 'Save changes' : 'Add task'}</button></div>
         </form>
       </Modal>
+      <DeleteConfirmation open={Boolean(deleteTarget)} itemType="task" itemName={deleteTarget?.title || ''} deleting={deleting} onCancel={() => setDeleteTarget(null)} onConfirm={confirmDeleteTask} />
     </div>
   )
 }

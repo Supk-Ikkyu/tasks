@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import type { ImportantLink } from '../types'
 import { EmptyState, ErrorMessage, LoadingState } from '../components/Feedback'
 import { Modal } from '../components/Modal'
+import { DeleteConfirmation } from '../components/DeleteConfirmation'
 
 export function Links({ userId }: { userId: string }) {
   const [links, setLinks] = useState<ImportantLink[]>([])
@@ -14,6 +15,8 @@ export function Links({ userId }: { userId: string }) {
   const [editing, setEditing] = useState<ImportantLink | null>(null)
   const [form, setForm] = useState({ title: '', url: '', category: '' })
   const [saving, setSaving] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<ImportantLink | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   const loadLinks = useCallback(async () => {
     const { data, error: requestError } = await supabase!.from('important_links').select('*').eq('user_id', userId).order('category').order('title')
@@ -46,11 +49,19 @@ export function Links({ userId }: { userId: string }) {
     else { setModalOpen(false); await loadLinks() }
   }
 
-  async function deleteLink(link: ImportantLink) {
-    if (!window.confirm(`Delete “${link.title}”?`)) return
-    const { error: requestError } = await supabase!.from('important_links').delete().eq('id', link.id).eq('user_id', userId)
-    if (requestError) setError(requestError.message)
-    else setLinks((current) => current.filter((item) => item.id !== link.id))
+  async function confirmDeleteLink() {
+    if (!deleteTarget) return
+    setDeleting(true)
+    const { error: requestError } = await supabase!.from('important_links').delete().eq('id', deleteTarget.id).eq('user_id', userId)
+    setDeleting(false)
+    if (requestError) {
+      setError(requestError.message)
+      setDeleteTarget(null)
+    }
+    else {
+      setLinks((current) => current.filter((item) => item.id !== deleteTarget.id))
+      setDeleteTarget(null)
+    }
   }
 
   return (
@@ -66,7 +77,7 @@ export function Links({ userId }: { userId: string }) {
         <div className="link-grid">
           {visibleLinks.map((link) => (
             <article className="link-card" key={link.id}>
-              <div className="link-card-top"><span className="category-label">{link.category || 'General'}</span><div className="card-actions"><button className="icon-button" type="button" onClick={() => openEdit(link)} aria-label={`Edit ${link.title}`}><Pencil size={17} /></button><button className="icon-button danger" type="button" onClick={() => deleteLink(link)} aria-label={`Delete ${link.title}`}><Trash2 size={17} /></button></div></div>
+              <div className="link-card-top"><span className="category-label">{link.category || 'General'}</span><div className="card-actions"><button className="icon-button" type="button" onClick={() => openEdit(link)} aria-label={`Edit ${link.title}`}><Pencil size={17} /></button><button className="icon-button danger" type="button" onClick={() => setDeleteTarget(link)} aria-label={`Delete ${link.title}`}><Trash2 size={17} /></button></div></div>
               <span className="link-icon"><Link2 size={22} /></span>
               <h3>{link.title}</h3>
               <p>{getHostname(link.url)}</p>
@@ -84,6 +95,7 @@ export function Links({ userId }: { userId: string }) {
           <div className="modal-actions"><button className="secondary-button" type="button" onClick={() => setModalOpen(false)}>Cancel</button><button className="primary-button" type="submit" disabled={saving}>{saving ? 'Saving…' : editing ? 'Save changes' : 'Add link'}</button></div>
         </form>
       </Modal>
+      <DeleteConfirmation open={Boolean(deleteTarget)} itemType="link" itemName={deleteTarget?.title || ''} deleting={deleting} onCancel={() => setDeleteTarget(null)} onConfirm={confirmDeleteLink} />
     </div>
   )
 }
