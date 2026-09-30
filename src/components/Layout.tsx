@@ -145,6 +145,11 @@ export function Layout({
     setProfileSuccess('Your data export has been downloaded.')
   }
 
+  function signOut() {
+    setProfileOpen(false)
+    onSignOut()
+  }
+
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -255,6 +260,11 @@ export function Layout({
           <section className="account-section export-section">
             <div className="account-section-heading"><Download size={19} /><div><h3>Export your data</h3><p>Download your tasks, notes, links, and calendar events as a JSON file.</p></div></div>
             <button className="secondary-button" type="button" onClick={exportData} disabled={exporting}><Download size={17} />{exporting ? 'Preparing export…' : 'Download data'}</button>
+          </section>
+
+          <section className="account-section sign-out-section">
+            <div><h3>Sign out</h3><p>End your session on this device.</p></div>
+            <button className="secondary-button danger-button" type="button" onClick={signOut}><LogOut size={17} />Sign out</button>
           </section>
 
           <div className="modal-actions"><button className="secondary-button" type="button" onClick={() => setProfileOpen(false)}>Close</button></div>
