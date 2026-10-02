@@ -58,7 +58,7 @@ Choose Daily, Weekly, or Monthly when creating or editing a task. Recurring task
 
 ## Focus timer and subtasks
 
-The Tasks page includes a focus timer with 15, 25, 50, and 90-minute sessions. Select a task, start the timer, and it continues accurately after a page refresh. Timer state is stored only in that browser.
+The standalone **Focus** page appears below Links in the navigation. Drag around its circular dial to choose any duration from 1 to 90 minutes, use a preset, or adjust one minute at a time. The countdown continues accurately after a page refresh. Timer state is stored only in that browser.
 
 Open **Add subtasks** on any task to create smaller steps, tick them off, or delete them. Subtasks are stored in Supabase and sync across devices. When a recurring task creates its next occurrence, the subtask titles are copied as incomplete steps.
 

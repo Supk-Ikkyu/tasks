@@ -23,9 +23,15 @@ const steps: TourStep[] = [
   },
   {
     title: 'Create and organise tasks',
-    detail: 'Break large tasks into checkable subtasks, then use the Focus Timer for a 15, 25, 50, or 90-minute work session. Repeating tasks copy their subtask list into the next occurrence.',
+    detail: 'Break large tasks into checkable subtasks. Repeating tasks copy their subtask list into the next occurrence.',
     section: 'tasks',
     target: '#tour-new-task',
+  },
+  {
+    title: 'Focus on one thing',
+    detail: 'Open Focus from the navigation, drag around the circular dial to set any duration from 1 to 90 minutes, and start the countdown.',
+    section: 'focus',
+    target: '.focus-card',
   },
   {
     title: 'Keep useful notes',
@@ -41,7 +47,7 @@ const steps: TourStep[] = [
   },
   {
     title: 'Move between sections',
-    detail: 'Use the navigation to open your Dashboard, Tasks, Notes, Calendar, and Important Links.',
+    detail: 'Use the navigation to open your Dashboard, Tasks, Notes, Calendar, Important Links, and Focus Timer.',
     section: 'dashboard',
     target: '[data-tour="main-navigation"]',
   },

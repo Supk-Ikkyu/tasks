@@ -13,6 +13,7 @@ import { Tasks } from './pages/Tasks'
 import { Notes } from './pages/Notes'
 import { Links } from './pages/Links'
 import { Calendar } from './pages/Calendar'
+import { FocusTimer } from './pages/FocusTimer'
 
 function SetupRequired() {
   return (
@@ -87,6 +88,7 @@ export default function App() {
     notes: <Notes userId={userId} />,
     calendar: <Calendar userId={userId} />,
     links: <Links userId={userId} />,
+    focus: <FocusTimer userId={userId} />,
   }[section]
 
   return (

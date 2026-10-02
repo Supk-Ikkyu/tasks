@@ -1,4 +1,4 @@
-export type Section = 'dashboard' | 'tasks' | 'notes' | 'calendar' | 'links'
+export type Section = 'dashboard' | 'tasks' | 'notes' | 'calendar' | 'links' | 'focus'
 
 export interface Note {
   id: string

@@ -11,6 +11,7 @@ import {
   Moon,
   NotebookText,
   Sun,
+  Timer,
   UserRound,
 } from 'lucide-react'
 import type { Section } from '../types'
@@ -23,6 +24,7 @@ const navigation: Array<{ id: Section; label: string; icon: typeof LayoutDashboa
   { id: 'notes', label: 'Notes', icon: NotebookText },
   { id: 'calendar', label: 'Calendar', icon: CalendarDays },
   { id: 'links', label: 'Links', icon: Link2 },
+  { id: 'focus', label: 'Focus', icon: Timer },
 ]
 
 interface LayoutProps {

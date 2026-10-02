@@ -1,11 +1,10 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
-import { Check, CheckCircle2, ChevronDown, ChevronUp, Circle, ListChecks, ListFilter, Pencil, Plus, Repeat2, Search, Timer, Trash2 } from 'lucide-react'
+import { Check, CheckCircle2, ChevronDown, ChevronUp, Circle, ListChecks, ListFilter, Pencil, Plus, Repeat2, Search, Trash2 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import type { Subtask, Task, TaskPriority, TaskRecurrence } from '../types'
 import { EmptyState, ErrorMessage, LoadingState } from '../components/Feedback'
 import { Modal } from '../components/Modal'
 import { DeleteConfirmation } from '../components/DeleteConfirmation'
-import { FocusTimer } from '../components/FocusTimer'
 
 type Filter = 'open' | 'completed' | 'all'
 const blankForm = { title: '', description: '', priority: 'medium' as TaskPriority, due_date: '', recurrence: 'none' as TaskRecurrence }
@@ -27,7 +26,6 @@ export function Tasks({ userId }: { userId: string }) {
   const [subtaskDrafts, setSubtaskDrafts] = useState<Record<string, string>>({})
   const [addingSubtask, setAddingSubtask] = useState<string | null>(null)
   const [subtaskDeleteTarget, setSubtaskDeleteTarget] = useState<Subtask | null>(null)
-  const [focusTaskId, setFocusTaskId] = useState('')
 
   const loadTasks = useCallback(async () => {
     setError('')
@@ -190,11 +188,6 @@ export function Tasks({ userId }: { userId: string }) {
     setSubtaskDeleteTarget(null)
   }
 
-  function focusOnTask(taskId: string) {
-    setFocusTaskId(taskId)
-    window.requestAnimationFrame(() => document.getElementById('focus-timer')?.scrollIntoView({ behavior: 'smooth', block: 'center' }))
-  }
-
   async function confirmDeleteTask() {
     if (!deleteTarget) return
     setDeleting(true)
@@ -213,8 +206,6 @@ export function Tasks({ userId }: { userId: string }) {
 
   return (
     <div className="page-stack">
-      <FocusTimer userId={userId} tasks={tasks} requestedTaskId={focusTaskId} />
-
       <div className="action-row">
         <div className="search-box"><Search size={18} /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search tasks" aria-label="Search tasks" /></div>
         <button className="primary-button" id="tour-new-task" type="button" onClick={openCreate}><Plus size={18} />New task</button>
@@ -280,7 +271,6 @@ export function Tasks({ userId }: { userId: string }) {
                   </div>
                 </div>
                 <div className="card-actions">
-                  {!task.completed && <button className="icon-button" type="button" onClick={() => focusOnTask(task.id)} aria-label={`Focus on ${task.title}`} title="Start a focus session"><Timer size={17} /></button>}
                   <button className="icon-button" type="button" onClick={() => openEdit(task)} aria-label={`Edit ${task.title}`}><Pencil size={17} /></button>
                   <button className="icon-button danger" type="button" onClick={() => setDeleteTarget(task)} aria-label={`Delete ${task.title}`}><Trash2 size={17} /></button>
                 </div>
