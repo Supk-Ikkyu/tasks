@@ -244,11 +244,14 @@ code { padding: 0.14em 0.38em; border: 1px solid var(--border); border-radius: 6
 .calendar-layout { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(280px, 0.65fr); gap: 18px; }
 .calendar-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
 .calendar-heading h2 { margin: 0; font-size: 1.25rem; }
+.month-title-button { display: inline-flex; align-items: center; gap: 7px; margin: 0; padding: 3px 5px 3px 0; border: 0; border-radius: 8px; background: transparent; color: var(--text); font-size: 1.25rem; font-weight: 750; cursor: pointer; }
+.month-title-button:hover { color: var(--primary); }
+.month-title-button:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
 .calendar-navigation { display: flex; align-items: center; gap: 4px; }
 .today-button { min-height: 36px; padding: 6px 10px; border: 1px solid var(--border); background: var(--surface); font-size: 0.78rem; }
 .weekday-row, .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
 .weekday-row span { padding: 8px 4px; color: var(--muted); font-size: 0.7rem; font-weight: 750; text-align: center; text-transform: uppercase; }
-.calendar-grid { overflow: hidden; border: 1px solid var(--border); border-radius: 14px; }
+.calendar-grid { overflow: hidden; border: 1px solid var(--border); border-radius: 14px; touch-action: pan-y; }
 .calendar-day { position: relative; min-height: 84px; padding: 9px; border: 0; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); background: var(--surface); color: var(--text); text-align: left; cursor: pointer; }
 .calendar-day:nth-child(7n) { border-right: 0; }
 .calendar-day:nth-last-child(-n+7) { border-bottom: 0; }
@@ -267,6 +270,7 @@ code { padding: 0.14em 0.38em; border: 1px solid var(--border); border-radius: 6
 .agenda-item > small { display: flex; align-items: center; gap: 5px; color: var(--muted); font-size: 0.7rem; }
 .agenda-item .card-actions { position: absolute; top: 8px; right: 8px; opacity: 0; }
 .agenda-item:hover .card-actions, .agenda-item:focus-within .card-actions { opacity: 1; }
+.month-picker-shortcuts { display: flex; justify-content: flex-start; margin-top: -7px; }
 
 .state-card, .empty-state { display: grid; min-height: 260px; place-items: center; align-content: center; padding: 32px; border: 1px dashed var(--border); border-radius: var(--radius); background: color-mix(in srgb, var(--surface) 68%, transparent); text-align: center; }
 .state-card { gap: 10px; color: var(--muted); }

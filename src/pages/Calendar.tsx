@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
-import { Bell, BellRing, CalendarDays, ChevronLeft, ChevronRight, Clock3, Pencil, Plus, Trash2 } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type TouchEvent } from 'react'
+import { Bell, BellRing, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Clock3, Pencil, Plus, Trash2 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import type { CalendarEvent } from '../types'
 import { EmptyState, ErrorMessage, LoadingState } from '../components/Feedback'
@@ -7,6 +7,7 @@ import { Modal } from '../components/Modal'
 import { DeleteConfirmation } from '../components/DeleteConfirmation'
 
 const blankForm = { title: '', description: '', start_at: '', end_at: '', reminder_minutes: '15' }
+const monthNames = Array.from({ length: 12 }, (_, index) => new Intl.DateTimeFormat('en', { month: 'long' }).format(new Date(2026, index, 1)))
 
 export function Calendar({ userId }: { userId: string }) {
   const [events, setEvents] = useState<CalendarEvent[]>([])
@@ -20,7 +21,12 @@ export function Calendar({ userId }: { userId: string }) {
   const [saving, setSaving] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<CalendarEvent | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [monthPickerOpen, setMonthPickerOpen] = useState(false)
+  const [pickerMonth, setPickerMonth] = useState(month.getMonth())
+  const [pickerYear, setPickerYear] = useState(String(month.getFullYear()))
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>(() => 'Notification' in window ? Notification.permission : 'denied')
+  const swipeStart = useRef<{ x: number; y: number } | null>(null)
+  const swipeHandled = useRef(false)
 
   const loadEvents = useCallback(async () => {
     const rangeStart = new Date(month.getFullYear(), month.getMonth() - 1, 1).toISOString()
@@ -114,6 +120,44 @@ export function Calendar({ userId }: { userId: string }) {
     setSelectedDate(toDateKey(next))
   }
 
+  function openMonthPicker() {
+    setPickerMonth(month.getMonth())
+    setPickerYear(String(month.getFullYear()))
+    setMonthPickerOpen(true)
+  }
+
+  function jumpToMonth(event: FormEvent) {
+    event.preventDefault()
+    const year = Number(pickerYear)
+    if (!Number.isInteger(year) || year < 1900 || year > 2200) {
+      setError('Choose a year between 1900 and 2200.')
+      return
+    }
+    const next = new Date(year, pickerMonth, 1)
+    setMonth(next)
+    setSelectedDate(toDateKey(next))
+    setMonthPickerOpen(false)
+    setError('')
+  }
+
+  function beginSwipe(event: TouchEvent<HTMLElement>) {
+    if (event.touches.length !== 1) return
+    swipeHandled.current = false
+    swipeStart.current = { x: event.touches[0].clientX, y: event.touches[0].clientY }
+  }
+
+  function finishSwipe(event: TouchEvent<HTMLElement>) {
+    const start = swipeStart.current
+    swipeStart.current = null
+    if (!start || event.changedTouches.length !== 1) return
+    const deltaX = event.changedTouches[0].clientX - start.x
+    const deltaY = event.changedTouches[0].clientY - start.y
+    if (Math.abs(deltaX) < 55 || Math.abs(deltaX) <= Math.abs(deltaY) * 1.15) return
+    swipeHandled.current = true
+    moveMonth(deltaX < 0 ? 1 : -1)
+    window.setTimeout(() => { swipeHandled.current = false }, 350)
+  }
+
   return (
     <div className="page-stack">
       <div className="calendar-actions" id="tour-calendar-tools">
@@ -129,18 +173,18 @@ export function Calendar({ userId }: { userId: string }) {
         <div className="calendar-layout">
           <section className="calendar-panel">
             <div className="calendar-heading">
-              <div><p className="eyebrow">Monthly view</p><h2>{new Intl.DateTimeFormat('en', { month: 'long', year: 'numeric' }).format(month)}</h2></div>
+              <div><p className="eyebrow">Monthly view</p><button className="month-title-button" type="button" onClick={openMonthPicker} aria-label="Choose month and year"><span>{new Intl.DateTimeFormat('en', { month: 'long', year: 'numeric' }).format(month)}</span><ChevronDown size={18} /></button></div>
               <div className="calendar-navigation"><button className="icon-button" type="button" onClick={() => moveMonth(-1)} aria-label="Previous month"><ChevronLeft /></button><button className="today-button" type="button" onClick={() => { const now = new Date(); setMonth(new Date(now.getFullYear(), now.getMonth(), 1)); setSelectedDate(toDateKey(now)) }}>Today</button><button className="icon-button" type="button" onClick={() => moveMonth(1)} aria-label="Next month"><ChevronRight /></button></div>
             </div>
             <div className="weekday-row" aria-hidden="true">{['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => <span key={day}>{day}</span>)}</div>
-            <div className="calendar-grid">
+            <div className="calendar-grid" onTouchStart={beginSwipe} onTouchEnd={finishSwipe}>
               {days.map((date) => {
                 const key = toDateKey(date)
                 const count = events.filter((event) => toDateKey(new Date(event.start_at)) === key).length
                 const outside = date.getMonth() !== month.getMonth()
                 const today = key === toDateKey(new Date())
                 return (
-                  <button key={key} type="button" className={`calendar-day${outside ? ' outside' : ''}${today ? ' today' : ''}${selectedDate === key ? ' selected' : ''}`} onClick={() => setSelectedDate(key)}>
+                  <button key={key} type="button" className={`calendar-day${outside ? ' outside' : ''}${today ? ' today' : ''}${selectedDate === key ? ' selected' : ''}`} onClick={() => { if (!swipeHandled.current) setSelectedDate(key) }}>
                     <span>{date.getDate()}</span>
                     {count > 0 && <small>{count} {count === 1 ? 'event' : 'events'}</small>}
                   </button>
@@ -177,6 +221,18 @@ export function Calendar({ userId }: { userId: string }) {
           <div className="form-grid"><label><span>Starts</span><input type="datetime-local" value={form.start_at} onChange={(e) => setForm({ ...form, start_at: e.target.value })} required /></label><label><span>Ends <small>Optional</small></span><input type="datetime-local" value={form.end_at} onChange={(e) => setForm({ ...form, end_at: e.target.value })} /></label></div>
           <label><span>Reminder</span><select value={form.reminder_minutes} onChange={(e) => setForm({ ...form, reminder_minutes: e.target.value })}><option value="">No reminder</option><option value="0">At start time</option><option value="5">5 minutes before</option><option value="15">15 minutes before</option><option value="30">30 minutes before</option><option value="60">1 hour before</option><option value="1440">1 day before</option></select></label>
           <div className="modal-actions"><button className="secondary-button" type="button" onClick={() => setModalOpen(false)}>Cancel</button><button className="primary-button" type="submit" disabled={saving}>{saving ? 'Saving…' : editing ? 'Save changes' : 'Add event'}</button></div>
+        </form>
+      </Modal>
+      <Modal title="Choose month and year" open={monthPickerOpen} onClose={() => setMonthPickerOpen(false)}>
+        <form className="modal-form" onSubmit={jumpToMonth}>
+          <div className="form-grid">
+            <label><span>Month</span><select value={pickerMonth} onChange={(event) => setPickerMonth(Number(event.target.value))}>{monthNames.map((name, index) => <option key={name} value={index}>{name}</option>)}</select></label>
+            <label><span>Year</span><input type="number" value={pickerYear} onChange={(event) => setPickerYear(event.target.value)} min="1900" max="2200" inputMode="numeric" required /></label>
+          </div>
+          <div className="month-picker-shortcuts">
+            <button className="text-button" type="button" onClick={() => { const now = new Date(); setPickerMonth(now.getMonth()); setPickerYear(String(now.getFullYear())) }}>Current month</button>
+          </div>
+          <div className="modal-actions"><button className="secondary-button" type="button" onClick={() => setMonthPickerOpen(false)}>Cancel</button><button className="primary-button" type="submit"><CalendarDays size={17} />Go to month</button></div>
         </form>
       </Modal>
       <DeleteConfirmation open={Boolean(deleteTarget)} itemType="event" itemName={deleteTarget?.title || ''} deleting={deleting} onCancel={() => setDeleteTarget(null)} onConfirm={confirmDeleteEvent} />
