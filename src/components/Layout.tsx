@@ -258,7 +258,7 @@ export function Layout({
           </section>
 
           <section className="account-section export-section">
-            <div className="account-section-heading"><Download size={19} /><div><h3>Export your data</h3><p>Download your tasks, notes, links, and calendar events as a JSON file.</p></div></div>
+            <div className="account-section-heading"><Download size={19} /><div><h3>Export your data</h3><p>Download your tasks, subtasks, notes, links, and calendar events as a JSON file.</p></div></div>
             <button className="secondary-button" type="button" onClick={exportData} disabled={exporting}><Download size={17} />{exporting ? 'Preparing export…' : 'Download data'}</button>
           </section>
 

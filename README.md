@@ -1,6 +1,6 @@
 # Tasks
 
-A responsive personal workspace for Tasks, Notes, Important Links, and Calendar. It supports multiple private accounts, display names, password recovery, data exports, recurring tasks, and light/dark themes.
+A responsive personal workspace for Tasks, Notes, Important Links, and Calendar. It supports multiple private accounts, display names, password recovery, data exports, recurring tasks, subtasks, a focus timer, and light/dark themes.
 
 ## Local setup
 
@@ -27,6 +27,8 @@ For a project that previously used the single-account version, run only `supabas
 
 For an existing multi-user installation, run `supabase/recurring_tasks_migration.sql` once to add the two fields used by recurring tasks. Existing tasks remain unchanged and default to **Does not repeat**.
 
+Run `supabase/subtasks_migration.sql` once on an existing installation to create the private subtask table. This migration does not change or delete existing tasks.
+
 ## Enable account registration
 
 In Supabase Dashboard:
@@ -40,19 +42,25 @@ Anyone who has the website link can request an account. Email confirmation helps
 
 New users choose a display name during registration. Existing users can click their account name in the sidebar or the account button in the top bar to set or change it. Display names are stored in Supabase Auth user metadata, so no additional database migration is required.
 
-The first sign-in also opens a responsive getting-started guide. Completion is stored as `onboarding_version` in Supabase Auth user metadata, and users can reopen the guide from the Help button at any time. Version 2 introduces password tools, exports, and recurring tasks. This feature does not require a database migration.
+The first sign-in also opens a responsive getting-started guide. Completion is stored as `onboarding_version` in Supabase Auth user metadata, and users can reopen the guide from the Help button at any time. Version 3 introduces the focus timer and subtasks.
 
 ## Passwords and data exports
 
 - Select **Forgot password?** on the sign-in page to request a recovery email.
 - Open **Account settings** to verify the current password and set a new one.
-- Select **Download data** in Account settings to export the signed-in user's tasks, notes, links, and calendar events as JSON.
+- Select **Download data** in Account settings to export the signed-in user's tasks, subtasks, notes, links, and calendar events as JSON.
 
 Password recovery requires the current production URL to be configured under **Authentication > URL Configuration** in Supabase. Without custom SMTP, Supabase's built-in email service is intended for limited testing and may be rate-limited.
 
 ## Recurring tasks
 
 Choose Daily, Weekly, or Monthly when creating or editing a task. Recurring tasks require a due date. When an occurrence is completed, the app keeps it as history and creates the next open occurrence. Reopening a completed occurrence does not create a duplicate.
+
+## Focus timer and subtasks
+
+The Tasks page includes a focus timer with 15, 25, 50, and 90-minute sessions. Select a task, start the timer, and it continues accurately after a page refresh. Timer state is stored only in that browser.
+
+Open **Add subtasks** on any task to create smaller steps, tick them off, or delete them. Subtasks are stored in Supabase and sync across devices. When a recurring task creates its next occurrence, the subtask titles are copied as incomplete steps.
 
 ## Run and verify
 

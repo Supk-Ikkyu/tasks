@@ -68,7 +68,7 @@ export default function App() {
   useEffect(() => {
     if (!session) return
     const completedVersion = Number(session.user.user_metadata.onboarding_version || 0)
-    if (completedVersion < 2) setTourOpen(true)
+    if (completedVersion < 3) setTourOpen(true)
   }, [session])
 
   if (!isSupabaseConfigured) return <SetupRequired />
@@ -117,7 +117,7 @@ export default function App() {
         return updateError?.message || null
       }}
       onExportData={async () => {
-        const tables = ['tasks', 'notes', 'important_links', 'calendar_events'] as const
+        const tables = ['tasks', 'subtasks', 'notes', 'important_links', 'calendar_events'] as const
         const results = await Promise.all(tables.map((table) =>
           supabase!.from(table).select('*').eq('user_id', userId),
         ))
@@ -125,13 +125,14 @@ export default function App() {
         if (failed?.error) return failed.error.message
 
         const exportPayload = {
-          schema_version: 1,
+          schema_version: 2,
           exported_at: new Date().toISOString(),
           account: { email: session.user.email || '', display_name: displayName },
           tasks: results[0].data || [],
-          notes: results[1].data || [],
-          important_links: results[2].data || [],
-          calendar_events: results[3].data || [],
+          subtasks: results[1].data || [],
+          notes: results[2].data || [],
+          important_links: results[3].data || [],
+          calendar_events: results[4].data || [],
         }
         const blob = new Blob([JSON.stringify(exportPayload, null, 2)], { type: 'application/json' })
         const downloadUrl = URL.createObjectURL(blob)
@@ -151,7 +152,7 @@ export default function App() {
         onNavigate={setSection}
         onComplete={() => {
           setTourOpen(false)
-          void supabase!.auth.updateUser({ data: { onboarding_version: 2 } })
+          void supabase!.auth.updateUser({ data: { onboarding_version: 3 } })
         }}
       />
     </Layout>

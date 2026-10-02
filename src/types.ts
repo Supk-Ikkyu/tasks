@@ -26,6 +26,17 @@ export interface Task {
   updated_at: string
 }
 
+export interface Subtask {
+  id: string
+  user_id: string
+  task_id: string
+  title: string
+  completed: boolean
+  position: number
+  created_at: string
+  updated_at: string
+}
+
 export interface ImportantLink {
   id: string
   user_id: string

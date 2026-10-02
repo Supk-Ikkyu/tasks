@@ -12,7 +12,7 @@ interface TourStep {
 const steps: TourStep[] = [
   {
     title: 'Welcome to Tasks',
-    detail: 'This updated guide covers the essential tools in your private workspace, including repeating tasks, account security, and data exports.',
+    detail: 'This updated guide covers the essential tools in your private workspace, including focus sessions, subtasks, repeating tasks, account security, and data exports.',
     section: 'dashboard',
   },
   {
@@ -23,7 +23,7 @@ const steps: TourStep[] = [
   },
   {
     title: 'Create and organise tasks',
-    detail: 'Add a priority and due date, or choose Daily, Weekly, or Monthly repeat. Completing a repeating task creates its next occurrence and preserves the completed one.',
+    detail: 'Break large tasks into checkable subtasks, then use the Focus Timer for a 15, 25, 50, or 90-minute work session. Repeating tasks copy their subtask list into the next occurrence.',
     section: 'tasks',
     target: '#tour-new-task',
   },

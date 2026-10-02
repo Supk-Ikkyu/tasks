@@ -175,6 +175,41 @@ code { padding: 0.14em 0.38em; border: 1px solid var(--border); border-radius: 6
 .priority-label > span { font-weight: 900; }
 .card-actions { display: flex; align-items: center; gap: 2px; }
 
+.focus-timer { display: grid; gap: 18px; padding: 20px; border: 1px solid var(--border); border-radius: 18px; background: linear-gradient(120deg, var(--surface) 0%, var(--surface-2) 100%); box-shadow: var(--shadow); }
+.focus-timer.running { border-color: color-mix(in srgb, var(--primary) 55%, var(--border)); }
+.focus-timer-heading { display: flex; align-items: center; gap: 12px; }
+.focus-timer-heading h2 { margin: 0; overflow: hidden; font-size: 1.06rem; text-overflow: ellipsis; white-space: nowrap; }
+.focus-icon { display: grid; width: 43px; height: 43px; flex: 0 0 auto; place-items: center; border-radius: 13px; background: var(--primary-soft); color: var(--primary); }
+.focus-timer-controls { display: grid; grid-template-columns: minmax(180px, 1fr) 150px auto auto; align-items: end; gap: 12px; }
+.focus-field { display: grid; gap: 6px; color: var(--muted); font-size: 0.72rem; font-weight: 750; }
+.focus-clock { display: grid; min-width: 112px; text-align: center; }
+.focus-clock strong { color: var(--text); font-size: 1.75rem; font-variant-numeric: tabular-nums; letter-spacing: 0.035em; line-height: 1; }
+.focus-clock small { margin-top: 5px; color: var(--muted); font-size: 0.68rem; }
+.focus-buttons { display: flex; gap: 8px; }
+.focus-progress, .subtask-progress { height: 5px; overflow: hidden; border-radius: 999px; background: var(--border); }
+.focus-progress span, .subtask-progress span { display: block; height: 100%; border-radius: inherit; background: var(--primary); transition: width 250ms linear; }
+.focus-complete { display: flex; align-items: center; gap: 7px; margin: -5px 0 0; color: var(--primary); font-size: 0.82rem; font-weight: 700; }
+
+.subtask-section { display: grid; gap: 8px; margin-top: 13px; }
+.subtask-toggle { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-2); color: var(--muted); font-size: 0.76rem; cursor: pointer; }
+.subtask-toggle:hover { border-color: color-mix(in srgb, var(--primary) 45%, var(--border)); color: var(--text); }
+.subtask-toggle > span { display: flex; align-items: center; gap: 7px; }
+.subtask-progress { height: 4px; }
+.subtask-panel { display: grid; gap: 10px; padding: 4px 2px 0; }
+.subtask-list { display: grid; gap: 3px; }
+.subtask-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px; min-height: 35px; padding: 4px 6px; border-radius: 8px; }
+.subtask-row:hover { background: var(--surface-2); }
+.subtask-row > button { display: grid; padding: 2px; border: 0; background: transparent; color: var(--primary); cursor: pointer; }
+.subtask-row > span { overflow: hidden; font-size: 0.82rem; line-height: 1.4; text-overflow: ellipsis; }
+.subtask-row.completed > span { color: var(--muted); text-decoration: line-through; }
+.subtask-row > .subtask-delete { color: var(--muted); opacity: 0; }
+.subtask-row:hover > .subtask-delete, .subtask-row:focus-within > .subtask-delete { opacity: 1; }
+.subtask-row > .subtask-delete:hover { color: var(--danger); }
+.subtask-form { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+.subtask-form input { min-height: 39px; }
+.subtask-form .secondary-button { min-height: 39px; padding: 7px 12px; }
+.secondary-button:disabled { cursor: not-allowed; opacity: 0.55; }
+
 .note-grid, .link-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
 .note-card, .link-card { min-width: 0; padding: 18px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); box-shadow: 0 5px 16px rgba(47, 42, 35, 0.025); }
 .note-top, .link-card-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
@@ -345,6 +380,9 @@ input:disabled { cursor: not-allowed; opacity: 0.68; }
   .mobile-nav-item span { max-width: 100%; overflow: hidden; font-size: 0.61rem; text-overflow: ellipsis; }
   .mobile-nav-item.active { color: var(--primary); font-weight: 750; }
   .dashboard-columns { grid-template-columns: 1fr; }
+  .focus-timer-controls { grid-template-columns: minmax(0, 1fr) 140px; }
+  .focus-clock { text-align: left; }
+  .focus-buttons { justify-content: flex-end; }
   .welcome-card { align-items: flex-start; flex-direction: column; }
   .login-page { grid-template-columns: 1fr; }
   .login-intro { min-height: 38vh; padding: 28px 24px; }
@@ -370,6 +408,14 @@ input:disabled { cursor: not-allowed; opacity: 0.68; }
   .task-card { grid-template-columns: auto minmax(0, 1fr); }
   .task-card > .card-actions { grid-column: 2; justify-content: flex-end; }
   .task-title-row { align-items: flex-start; flex-direction: column; gap: 2px; }
+  .focus-timer { padding: 16px; }
+  .focus-timer-controls { grid-template-columns: 1fr 1fr; }
+  .focus-field:first-child { grid-column: 1 / -1; }
+  .focus-clock { align-self: center; }
+  .focus-clock strong { font-size: 1.55rem; }
+  .focus-buttons { justify-content: stretch; }
+  .focus-buttons button { flex: 1; padding-right: 10px; padding-left: 10px; }
+  .subtask-row > .subtask-delete { opacity: 1; }
   .calendar-panel, .agenda-panel { padding: 15px; }
   .calendar-heading { align-items: flex-start; flex-direction: column; }
   .calendar-navigation { align-self: flex-end; }

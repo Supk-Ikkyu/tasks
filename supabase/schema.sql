@@ -38,6 +38,17 @@ create table if not exists public.tasks (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists public.subtasks (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  task_id uuid not null references public.tasks(id) on delete cascade,
+  title text not null check (char_length(title) between 1 and 200),
+  completed boolean not null default false,
+  position integer not null default 0 check (position >= 0),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 create table if not exists public.important_links (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
@@ -62,6 +73,7 @@ create table if not exists public.calendar_events (
 );
 
 create index if not exists tasks_user_due_idx on public.tasks(user_id, completed, due_date);
+create index if not exists subtasks_task_position_idx on public.subtasks(task_id, position, created_at);
 create index if not exists notes_user_updated_idx on public.notes(user_id, updated_at desc);
 create index if not exists links_user_category_idx on public.important_links(user_id, category);
 create index if not exists events_user_start_idx on public.calendar_events(user_id, start_at);
@@ -74,6 +86,10 @@ drop trigger if exists set_tasks_updated_at on public.tasks;
 create trigger set_tasks_updated_at before update on public.tasks
 for each row execute function public.set_updated_at();
 
+drop trigger if exists set_subtasks_updated_at on public.subtasks;
+create trigger set_subtasks_updated_at before update on public.subtasks
+for each row execute function public.set_updated_at();
+
 drop trigger if exists set_links_updated_at on public.important_links;
 create trigger set_links_updated_at before update on public.important_links
 for each row execute function public.set_updated_at();
@@ -84,6 +100,7 @@ for each row execute function public.set_updated_at();
 
 alter table public.notes enable row level security;
 alter table public.tasks enable row level security;
+alter table public.subtasks enable row level security;
 alter table public.important_links enable row level security;
 alter table public.calendar_events enable row level security;
 
@@ -98,6 +115,26 @@ create policy "Owner only tasks" on public.tasks
 for all to authenticated
 using (user_id = auth.uid())
 with check (user_id = auth.uid());
+
+drop policy if exists "Owner only subtasks" on public.subtasks;
+create policy "Owner only subtasks" on public.subtasks
+for all to authenticated
+using (
+  user_id = auth.uid()
+  and exists (
+    select 1 from public.tasks
+    where tasks.id = subtasks.task_id
+      and tasks.user_id = auth.uid()
+  )
+)
+with check (
+  user_id = auth.uid()
+  and exists (
+    select 1 from public.tasks
+    where tasks.id = subtasks.task_id
+      and tasks.user_id = auth.uid()
+  )
+);
 
 drop policy if exists "Owner only links" on public.important_links;
 create policy "Owner only links" on public.important_links
