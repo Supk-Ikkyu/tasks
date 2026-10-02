@@ -251,7 +251,12 @@ code { padding: 0.14em 0.38em; border: 1px solid var(--border); border-radius: 6
 .today-button { min-height: 36px; padding: 6px 10px; border: 1px solid var(--border); background: var(--surface); font-size: 0.78rem; }
 .weekday-row, .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
 .weekday-row span { padding: 8px 4px; color: var(--muted); font-size: 0.7rem; font-weight: 750; text-align: center; text-transform: uppercase; }
-.calendar-grid { overflow: hidden; border: 1px solid var(--border); border-radius: 14px; touch-action: pan-y; }
+.calendar-swipe-viewport { overflow: hidden; border: 1px solid var(--border); border-radius: 14px; touch-action: pan-y; }
+.calendar-track { display: flex; width: 100%; will-change: transform; }
+.calendar-track.animating { transition: transform 300ms cubic-bezier(0.22, 0.8, 0.3, 1); }
+.calendar-track.dragging { cursor: grabbing; }
+.calendar-slide { min-width: 100%; }
+.calendar-grid { overflow: hidden; }
 .calendar-day { position: relative; min-height: 84px; padding: 9px; border: 0; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); background: var(--surface); color: var(--text); text-align: left; cursor: pointer; }
 .calendar-day:nth-child(7n) { border-right: 0; }
 .calendar-day:nth-last-child(-n+7) { border-bottom: 0; }

@@ -24,9 +24,14 @@ export function Calendar({ userId }: { userId: string }) {
   const [monthPickerOpen, setMonthPickerOpen] = useState(false)
   const [pickerMonth, setPickerMonth] = useState(month.getMonth())
   const [pickerYear, setPickerYear] = useState(String(month.getFullYear()))
+  const [dragOffset, setDragOffset] = useState(0)
+  const [dragging, setDragging] = useState(false)
+  const [animating, setAnimating] = useState(false)
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>(() => 'Notification' in window ? Notification.permission : 'denied')
-  const swipeStart = useRef<{ x: number; y: number } | null>(null)
+  const swipeStart = useRef<{ x: number; y: number; time: number; width: number } | null>(null)
   const swipeHandled = useRef(false)
+  const calendarViewport = useRef<HTMLDivElement>(null)
+  const animationTimer = useRef<number | null>(null)
 
   const loadEvents = useCallback(async () => {
     const rangeStart = new Date(month.getFullYear(), month.getMonth() - 1, 1).toISOString()
@@ -54,8 +59,12 @@ export function Calendar({ userId }: { userId: string }) {
     return () => timers.forEach(window.clearTimeout)
   }, [events, notificationPermission])
 
-  const days = useMemo(() => buildMonthGrid(month), [month])
+  const visibleMonths = useMemo(() => [-1, 0, 1].map((offset) => new Date(month.getFullYear(), month.getMonth() + offset, 1)), [month])
   const selectedEvents = useMemo(() => events.filter((event) => toDateKey(new Date(event.start_at)) === selectedDate), [events, selectedDate])
+
+  useEffect(() => () => {
+    if (animationTimer.current !== null) window.clearTimeout(animationTimer.current)
+  }, [])
 
   function openCreate(date = selectedDate) {
     setEditing(null)
@@ -141,21 +150,72 @@ export function Calendar({ userId }: { userId: string }) {
   }
 
   function beginSwipe(event: TouchEvent<HTMLElement>) {
-    if (event.touches.length !== 1) return
+    if (event.touches.length !== 1 || animating) return
+    const width = calendarViewport.current?.clientWidth || 1
     swipeHandled.current = false
-    swipeStart.current = { x: event.touches[0].clientX, y: event.touches[0].clientY }
+    swipeStart.current = { x: event.touches[0].clientX, y: event.touches[0].clientY, time: Date.now(), width }
+    setDragging(true)
+  }
+
+  function continueSwipe(event: TouchEvent<HTMLElement>) {
+    const start = swipeStart.current
+    if (!start || event.touches.length !== 1 || animating) return
+    const deltaX = event.touches[0].clientX - start.x
+    const deltaY = event.touches[0].clientY - start.y
+    if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 10) {
+      setDragging(false)
+      setDragOffset(0)
+      swipeStart.current = null
+      return
+    }
+    if (Math.abs(deltaX) > 6) swipeHandled.current = true
+    setDragOffset(Math.max(-start.width, Math.min(start.width, deltaX)))
   }
 
   function finishSwipe(event: TouchEvent<HTMLElement>) {
     const start = swipeStart.current
     swipeStart.current = null
-    if (!start || event.changedTouches.length !== 1) return
+    setDragging(false)
+    if (!start || event.changedTouches.length !== 1 || animating) return
     const deltaX = event.changedTouches[0].clientX - start.x
     const deltaY = event.changedTouches[0].clientY - start.y
-    if (Math.abs(deltaX) < 55 || Math.abs(deltaX) <= Math.abs(deltaY) * 1.15) return
-    swipeHandled.current = true
-    moveMonth(deltaX < 0 ? 1 : -1)
+    const elapsed = Math.max(1, Date.now() - start.time)
+    const velocity = Math.abs(deltaX) / elapsed
+    const horizontal = Math.abs(deltaX) > Math.abs(deltaY) * 1.1
+    const shouldChangeMonth = horizontal && (Math.abs(deltaX) >= start.width * 0.24 || (Math.abs(deltaX) >= 30 && velocity >= 0.5))
+    if (shouldChangeMonth) animateMonth(deltaX < 0 ? 1 : -1, start.width)
+    else snapCalendarBack()
     window.setTimeout(() => { swipeHandled.current = false }, 350)
+  }
+
+  function cancelSwipe() {
+    swipeStart.current = null
+    setDragging(false)
+    snapCalendarBack()
+  }
+
+  function snapCalendarBack() {
+    setAnimating(true)
+    setDragOffset(0)
+    if (animationTimer.current !== null) window.clearTimeout(animationTimer.current)
+    animationTimer.current = window.setTimeout(() => {
+      setAnimating(false)
+      animationTimer.current = null
+    }, 310)
+  }
+
+  function animateMonth(offset: -1 | 1, suppliedWidth?: number) {
+    if (animating) return
+    const width = suppliedWidth || calendarViewport.current?.clientWidth || 1
+    setAnimating(true)
+    setDragOffset(-offset * width)
+    if (animationTimer.current !== null) window.clearTimeout(animationTimer.current)
+    animationTimer.current = window.setTimeout(() => {
+      moveMonth(offset)
+      setAnimating(false)
+      setDragOffset(0)
+      animationTimer.current = null
+    }, 300)
   }
 
   return (
@@ -174,22 +234,40 @@ export function Calendar({ userId }: { userId: string }) {
           <section className="calendar-panel">
             <div className="calendar-heading">
               <div><p className="eyebrow">Monthly view</p><button className="month-title-button" type="button" onClick={openMonthPicker} aria-label="Choose month and year"><span>{new Intl.DateTimeFormat('en', { month: 'long', year: 'numeric' }).format(month)}</span><ChevronDown size={18} /></button></div>
-              <div className="calendar-navigation"><button className="icon-button" type="button" onClick={() => moveMonth(-1)} aria-label="Previous month"><ChevronLeft /></button><button className="today-button" type="button" onClick={() => { const now = new Date(); setMonth(new Date(now.getFullYear(), now.getMonth(), 1)); setSelectedDate(toDateKey(now)) }}>Today</button><button className="icon-button" type="button" onClick={() => moveMonth(1)} aria-label="Next month"><ChevronRight /></button></div>
+              <div className="calendar-navigation"><button className="icon-button" type="button" onClick={() => animateMonth(-1)} disabled={animating} aria-label="Previous month"><ChevronLeft /></button><button className="today-button" type="button" onClick={() => { const now = new Date(); setMonth(new Date(now.getFullYear(), now.getMonth(), 1)); setSelectedDate(toDateKey(now)); setDragOffset(0) }}>Today</button><button className="icon-button" type="button" onClick={() => animateMonth(1)} disabled={animating} aria-label="Next month"><ChevronRight /></button></div>
             </div>
             <div className="weekday-row" aria-hidden="true">{['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => <span key={day}>{day}</span>)}</div>
-            <div className="calendar-grid" onTouchStart={beginSwipe} onTouchEnd={finishSwipe}>
-              {days.map((date) => {
-                const key = toDateKey(date)
-                const count = events.filter((event) => toDateKey(new Date(event.start_at)) === key).length
-                const outside = date.getMonth() !== month.getMonth()
-                const today = key === toDateKey(new Date())
-                return (
-                  <button key={key} type="button" className={`calendar-day${outside ? ' outside' : ''}${today ? ' today' : ''}${selectedDate === key ? ' selected' : ''}`} onClick={() => { if (!swipeHandled.current) setSelectedDate(key) }}>
-                    <span>{date.getDate()}</span>
-                    {count > 0 && <small>{count} {count === 1 ? 'event' : 'events'}</small>}
-                  </button>
-                )
-              })}
+            <div
+              ref={calendarViewport}
+              className="calendar-swipe-viewport"
+              onTouchStart={beginSwipe}
+              onTouchMove={continueSwipe}
+              onTouchEnd={finishSwipe}
+              onTouchCancel={cancelSwipe}
+            >
+              <div className={`calendar-track${dragging ? ' dragging' : ''}${animating ? ' animating' : ''}`} style={{ transform: `translate3d(calc(-100% + ${dragOffset}px), 0, 0)` }}>
+                {visibleMonths.map((slideMonth, slideIndex) => {
+                  const isCurrentSlide = slideIndex === 1
+                  return (
+                    <div className="calendar-slide" key={`${slideMonth.getFullYear()}-${slideMonth.getMonth()}`} aria-hidden={!isCurrentSlide}>
+                      <div className="calendar-grid">
+                        {buildMonthGrid(slideMonth).map((date) => {
+                          const key = toDateKey(date)
+                          const count = events.filter((event) => toDateKey(new Date(event.start_at)) === key).length
+                          const outside = date.getMonth() !== slideMonth.getMonth()
+                          const today = key === toDateKey(new Date())
+                          return (
+                            <button key={key} type="button" tabIndex={isCurrentSlide ? 0 : -1} className={`calendar-day${outside ? ' outside' : ''}${today ? ' today' : ''}${isCurrentSlide && selectedDate === key ? ' selected' : ''}`} onClick={() => { if (isCurrentSlide && !swipeHandled.current) setSelectedDate(key) }}>
+                              <span>{date.getDate()}</span>
+                              {count > 0 && <small>{count} {count === 1 ? 'event' : 'events'}</small>}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
           </section>
 
