@@ -15,6 +15,7 @@ Copy `.env.example` to `.env` and enter the project values from Supabase:
 ```env
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-publishable-or-anon-key
+VITE_VAPID_PUBLIC_KEY=your-vapid-public-key
 ```
 
 Never put a Supabase `service_role` key in this frontend project.
@@ -92,4 +93,28 @@ The Render service may also be renamed. If `tasks.onrender.com` is unavailable, 
 
 ## Calendar notifications
 
-Calendar notifications work while the website is open and browser notification permission has been granted. Notifications while the site is closed require a future Web Push and server-side scheduler implementation.
+Calendar reminders use Web Push, a Service Worker, a Supabase Edge Function, and a one-minute Supabase Cron job. They can arrive while the website is closed.
+
+### One-time Web Push setup
+
+1. Generate VAPID keys:
+
+   ```bash
+   npx web-push generate-vapid-keys
+   ```
+
+2. Add the public key as `VITE_VAPID_PUBLIC_KEY` in local `.env` and Render. Never expose the private key.
+3. Run `supabase/push_notifications_migration.sql` in Supabase SQL Editor.
+4. Deploy `supabase/functions/send-calendar-reminders` with JWT verification disabled, as configured in `supabase/config.toml`.
+5. Add these Supabase Edge Function secrets: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` (for example `mailto:your@email.com`), and a long random `CRON_SECRET`.
+6. Edit the two placeholders in `supabase/push_cron_setup.sql`, using the same `CRON_SECRET`, then run it in SQL Editor.
+7. Redeploy the Render site after adding `VITE_VAPID_PUBLIC_KEY`.
+
+Example Supabase CLI commands after logging in and linking the project:
+
+```bash
+npx supabase functions deploy send-calendar-reminders --no-verify-jwt
+npx supabase secrets set VAPID_PUBLIC_KEY=YOUR_PUBLIC_KEY VAPID_PRIVATE_KEY=YOUR_PRIVATE_KEY VAPID_SUBJECT=mailto:YOUR_EMAIL CRON_SECRET=YOUR_LONG_RANDOM_SECRET
+```
+
+Every user must enable notifications separately on each device. On iPhone and iPad, open the production site in Safari, choose **Share > Add to Home Screen**, launch Tasks from the installed icon, and then select **Enable background notifications**. Web Push requires HTTPS in production; Render provides HTTPS.

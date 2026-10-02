@@ -41,7 +41,7 @@ const steps: TourStep[] = [
   },
   {
     title: 'Plan with the calendar',
-    detail: 'Add events and optional reminders. Browser reminders are delivered while this website is open.',
+    detail: 'Add events and optional reminders. Enable background notifications on each device to receive reminders even when Tasks is closed.',
     section: 'calendar',
     target: '#tour-calendar-tools',
   },

@@ -8,6 +8,7 @@ import { DeleteConfirmation } from '../components/DeleteConfirmation'
 
 const blankForm = { title: '', description: '', start_at: '', end_at: '', reminder_minutes: '15' }
 const monthNames = Array.from({ length: 12 }, (_, index) => new Intl.DateTimeFormat('en', { month: 'long' }).format(new Date(2026, index, 1)))
+type PushStatus = 'checking' | 'disabled' | 'enabled' | 'unsupported'
 
 export function Calendar({ userId }: { userId: string }) {
   const [events, setEvents] = useState<CalendarEvent[]>([])
@@ -27,7 +28,8 @@ export function Calendar({ userId }: { userId: string }) {
   const [dragOffset, setDragOffset] = useState(0)
   const [dragging, setDragging] = useState(false)
   const [animating, setAnimating] = useState(false)
-  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>(() => 'Notification' in window ? Notification.permission : 'denied')
+  const [pushStatus, setPushStatus] = useState<PushStatus>('checking')
+  const [pushBusy, setPushBusy] = useState(false)
   const swipeStart = useRef<{ x: number; y: number; time: number; width: number } | null>(null)
   const swipeHandled = useRef(false)
   const calendarViewport = useRef<HTMLDivElement>(null)
@@ -45,19 +47,24 @@ export function Calendar({ userId }: { userId: string }) {
   useEffect(() => { void loadEvents() }, [loadEvents])
 
   useEffect(() => {
-    if (notificationPermission !== 'granted') return
-    const timers: number[] = []
-    for (const event of events) {
-      if (event.reminder_minutes === null) continue
-      const delay = new Date(event.start_at).getTime() - event.reminder_minutes * 60_000 - Date.now()
-      if (delay > 0 && delay < 2_147_000_000) {
-        timers.push(window.setTimeout(() => {
-          new Notification(event.title, { body: `${formatEventTime(event.start_at)}${event.description ? ` — ${event.description}` : ''}`, icon: '/favicon.svg' })
-        }, delay))
+    let active = true
+    async function checkPushSubscription() {
+      if (!supportsWebPush()) { if (active) setPushStatus('unsupported'); return }
+      try {
+        const registration = await navigator.serviceWorker.register('/sw.js')
+        const subscription = await registration.pushManager.getSubscription()
+        if (!active) return
+        if (subscription && Notification.permission === 'granted') {
+          await savePushSubscription(subscription)
+          if (active) setPushStatus('enabled')
+        } else setPushStatus('disabled')
+      } catch {
+        if (active) setPushStatus('unsupported')
       }
     }
-    return () => timers.forEach(window.clearTimeout)
-  }, [events, notificationPermission])
+    void checkPushSubscription()
+    return () => { active = false }
+  }, [userId])
 
   const visibleMonths = useMemo(() => [-1, 0, 1].map((offset) => new Date(month.getFullYear(), month.getMonth() + offset, 1)), [month])
   const selectedEvents = useMemo(() => events.filter((event) => toDateKey(new Date(event.start_at)) === selectedDate), [events, selectedDate])
@@ -116,11 +123,60 @@ export function Calendar({ userId }: { userId: string }) {
     }
   }
 
-  async function requestNotifications() {
-    if (!('Notification' in window)) { setError('This browser does not support notifications.'); return }
-    const permission = await Notification.requestPermission()
-    setNotificationPermission(permission)
-    if (permission === 'denied') setError('Notifications are blocked. You can enable them from your browser site settings.')
+  async function togglePushNotifications() {
+    setError('')
+    if (!supportsWebPush()) {
+      setError('Web Push is not supported in this browser. On iPhone or iPad, install this website to the Home Screen and open it from its icon.')
+      return
+    }
+    if (pushStatus !== 'enabled' && isAppleMobile() && !isStandaloneApp()) {
+      setError('On iPhone or iPad: open this website in Safari, select Share, choose Add to Home Screen, then open Tasks from the new Home Screen icon and enable notifications there.')
+      return
+    }
+    setPushBusy(true)
+    try {
+      const registration = await navigator.serviceWorker.register('/sw.js')
+      const existing = await registration.pushManager.getSubscription()
+      if (pushStatus === 'enabled') {
+        if (existing) {
+          await supabase!.rpc('remove_push_subscription', { p_endpoint: existing.endpoint })
+          await existing.unsubscribe()
+        }
+        setPushStatus('disabled')
+        return
+      }
+
+      const permission = await Notification.requestPermission()
+      if (permission !== 'granted') {
+        setError('Notifications are blocked. Enable them in this device\'s browser or notification settings, then try again.')
+        setPushStatus('disabled')
+        return
+      }
+      const publicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY
+      if (!publicKey) throw new Error('Push notifications have not been configured by the website administrator.')
+      const subscription = existing || await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(publicKey),
+      })
+      await savePushSubscription(subscription)
+      setPushStatus('enabled')
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : 'Push notifications could not be enabled.')
+    } finally {
+      setPushBusy(false)
+    }
+  }
+
+  async function savePushSubscription(subscription: PushSubscription) {
+    const json = subscription.toJSON()
+    if (!json.keys?.p256dh || !json.keys.auth) throw new Error('This device returned an incomplete push subscription.')
+    const { error: requestError } = await supabase!.rpc('save_push_subscription', {
+      p_endpoint: subscription.endpoint,
+      p_p256dh: json.keys.p256dh,
+      p_auth: json.keys.auth,
+      p_device_name: navigator.userAgent,
+    })
+    if (requestError) throw requestError
   }
 
   function moveMonth(offset: number) {
@@ -221,13 +277,13 @@ export function Calendar({ userId }: { userId: string }) {
   return (
     <div className="page-stack">
       <div className="calendar-actions" id="tour-calendar-tools">
-        <button className="secondary-button" type="button" onClick={requestNotifications}>
-          {notificationPermission === 'granted' ? <BellRing size={18} /> : <Bell size={18} />}
-          {notificationPermission === 'granted' ? 'Notifications enabled' : 'Enable notifications'}
+        <button className="secondary-button" type="button" onClick={togglePushNotifications} disabled={pushBusy || pushStatus === 'checking'}>
+          {pushStatus === 'enabled' ? <BellRing size={18} /> : <Bell size={18} />}
+          {pushBusy ? 'Updating…' : pushStatus === 'checking' ? 'Checking notifications…' : pushStatus === 'enabled' ? 'Background notifications enabled' : 'Enable background notifications'}
         </button>
         <button className="primary-button" type="button" onClick={() => openCreate()}><Plus size={18} />New event</button>
       </div>
-      <p className="notification-hint">Calendar reminders are delivered while this website is open. Background push notifications can be added in a later version.</p>
+      <p className="notification-hint">Enable notifications once on each device. iPhone and iPad users must first add Tasks to the Home Screen and open it from the installed icon.</p>
       {error && <ErrorMessage message={error} />}
       {loading ? <LoadingState label="Loading calendar…" /> : (
         <div className="calendar-layout">
@@ -342,6 +398,21 @@ function formatSelectedDate(value: string) {
   return new Intl.DateTimeFormat('en-GB', { weekday: 'long', day: 'numeric', month: 'short' }).format(new Date(`${value}T00:00:00`))
 }
 
-function formatEventTime(value: string) {
-  return new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(value))
+function supportsWebPush() {
+  return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window
+}
+
+function isAppleMobile() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+}
+
+function isStandaloneApp() {
+  return window.matchMedia('(display-mode: standalone)').matches || Boolean((navigator as Navigator & { standalone?: boolean }).standalone)
+}
+
+function urlBase64ToUint8Array(value: string) {
+  const padding = '='.repeat((4 - value.length % 4) % 4)
+  const base64 = (value + padding).replace(/-/g, '+').replace(/_/g, '/')
+  const rawData = window.atob(base64)
+  return Uint8Array.from([...rawData].map((character) => character.charCodeAt(0)))
 }

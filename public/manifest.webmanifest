@@ -1,0 +1,19 @@
+{
+  "name": "Tasks",
+  "short_name": "Tasks",
+  "description": "A calm workspace for tasks, notes, links, schedules, and focus sessions.",
+  "start_url": "/",
+  "scope": "/",
+  "id": "/",
+  "display": "standalone",
+  "background_color": "#f4efe5",
+  "theme_color": "#203552",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
