@@ -76,7 +76,7 @@ code { padding: 0.14em 0.38em; border: 1px solid var(--border); border-radius: 6
 .account-summary strong { font-size: 0.9rem; }
 .account-summary div span { overflow: hidden; margin-top: 2px; color: var(--muted); font-size: 0.72rem; text-overflow: ellipsis; }
 
-.main-column { min-height: 100vh; margin-left: 250px; }
+.main-column { display: flex; min-height: 100vh; margin-left: 250px; flex-direction: column; }
 .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 28px clamp(24px, 4vw, 54px) 20px; }
 .topbar > div:first-child { min-width: 0; }
 .topbar-actions { display: flex; align-items: center; gap: 9px; }
@@ -86,7 +86,12 @@ code { padding: 0.14em 0.38em; border: 1px solid var(--border); border-radius: 6
 .theme-toggle, .primary-button, .secondary-button, .text-button, .today-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border-radius: 11px; font-weight: 700; cursor: pointer; transition: transform 140ms ease, background 140ms ease, border-color 140ms ease; }
 .theme-toggle { padding: 10px 13px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 0.86rem; }
 .theme-toggle:hover, .secondary-button:hover { border-color: var(--primary); }
-.content { width: min(1480px, 100%); margin: 0 auto; padding: 8px clamp(24px, 4vw, 54px) 56px; }
+.app-switch-link { text-decoration: none; }
+.content { width: min(1480px, 100%); flex: 1; margin: 0 auto; padding: 8px clamp(24px, 4vw, 54px) 56px; }
+.workspace-footer { display: flex; justify-content: center; padding: 8px 24px 30px; color: var(--muted); font-size: 0.75rem; }
+.workspace-footer a { display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
+.workspace-footer a:hover { color: var(--primary); }
+.workspace-footer span { color: var(--text); }
 .primary-button, .secondary-button { min-height: 43px; padding: 10px 16px; border: 1px solid transparent; font-size: 0.9rem; text-decoration: none; }
 .primary-button { background: var(--primary); color: var(--surface); }
 :root[data-theme="dark"] .primary-button { color: #15202b; }
@@ -366,7 +371,7 @@ input:disabled { cursor: not-allowed; opacity: 0.68; }
 .tour-icon { display: grid; width: 46px; height: 46px; place-items: center; margin-bottom: 15px; border-radius: 13px; background: var(--primary-soft); color: var(--primary); }
 .tour-card h2 { margin-bottom: 9px; font-size: 1.35rem; }
 .tour-card > p { margin-bottom: 19px; color: var(--muted); font-size: 0.92rem; line-height: 1.62; }
-.tour-progress { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-bottom: 19px; }
+.tour-progress { display: grid; gap: 4px; margin-bottom: 19px; }
 .tour-progress span { height: 4px; border-radius: 999px; background: var(--surface-2); }
 .tour-progress span.active { background: var(--primary); }
 .tour-actions { display: flex; align-items: center; justify-content: space-between; gap: 10px; }

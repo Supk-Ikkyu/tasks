@@ -4,6 +4,8 @@ import {
   CheckSquare2,
   CircleHelp,
   Download,
+  ExternalLink,
+  Instagram,
   KeyRound,
   LayoutDashboard,
   Link2,
@@ -183,10 +185,6 @@ export function Layout({
             <span className="avatar">{avatarLetter}</span>
             <div><strong>{displayName}</strong><span>{email}</span></div>
           </button>
-          <button className="nav-item" type="button" onClick={onSignOut}>
-            <LogOut size={19} />
-            <span>Sign out</span>
-          </button>
         </div>
       </aside>
 
@@ -201,6 +199,10 @@ export function Layout({
               <CircleHelp size={19} />
               <span>Help</span>
             </button>
+            <a className="theme-toggle app-switch-link" id="tour-market-news" href="https://marketdailynews.onrender.com/" aria-label="Open Market Daily News">
+              <ExternalLink size={19} />
+              <span>Market News</span>
+            </a>
             <button className="theme-toggle profile-button" type="button" onClick={openProfile} aria-label="Edit account">
               <UserRound size={19} />
               <span>{displayName}</span>
@@ -212,6 +214,11 @@ export function Layout({
           </div>
         </header>
         <main className="content">{children}</main>
+        <footer className="workspace-footer">
+          <a href="https://www.instagram.com/_.ikkyu._/" target="_blank" rel="noreferrer" aria-label="Open Instagram profile @_.ikkyu._">
+            <Instagram size={15} />ig: <span>@_.ikkyu._</span>
+          </a>
+        </footer>
       </div>
 
       <nav className="mobile-nav" aria-label="Mobile navigation" data-tour="main-navigation">

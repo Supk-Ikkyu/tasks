@@ -12,50 +12,79 @@ interface TourStep {
 const steps: TourStep[] = [
   {
     title: 'Welcome to Tasks',
-    detail: 'This updated guide covers the essential tools in your private workspace, including focus sessions, subtasks, repeating tasks, account security, and data exports.',
+    detail: 'This guide introduces every essential part of your workspace. Use Next and Back at your own pace; you can close the guide and replay it from Help at any time.',
     section: 'dashboard',
   },
   {
     title: 'Your daily overview',
-    detail: 'The Dashboard brings together your open tasks, saved notes, important links, and upcoming events.',
+    detail: 'The Dashboard gives you a quick picture of open tasks, saved notes, important links, and upcoming events. Select a summary card to move directly to that section.',
     section: 'dashboard',
     target: '#tour-dashboard-overview',
   },
   {
     title: 'Create and organise tasks',
-    detail: 'Break large tasks into checkable subtasks. Repeating tasks copy their subtask list into the next occurrence.',
+    detail: 'Create a task with a due date, priority, and optional details. Use filters and search to find active, completed, overdue, or important work quickly.',
     section: 'tasks',
     target: '#tour-new-task',
   },
   {
-    title: 'Focus on one thing',
-    detail: 'Open Focus from the navigation, drag around the circular dial to set any duration from 1 to 90 minutes, and start the countdown.',
-    section: 'focus',
-    target: '.focus-card',
+    title: 'Subtasks and repeating work',
+    detail: 'Break a large task into smaller checkable subtasks so progress is visible. For routines, set a repeat schedule; the next occurrence keeps the same subtask list.',
+    section: 'tasks',
+    target: '#tour-new-task',
   },
   {
     title: 'Keep useful notes',
-    detail: 'Create notes for ideas, references, or information you want to keep close at hand.',
+    detail: 'Use Notes for ideas, study references, meeting details, or information you want to keep nearby. Add clear titles so search can find them later.',
     section: 'notes',
     target: '#tour-new-note',
   },
   {
     title: 'Plan with the calendar',
-    detail: 'Add events and optional reminders. Enable background notifications on each device to receive reminders even when Tasks is closed.',
+    detail: 'Add events with dates, times, descriptions, and optional reminders. Swipe between months on touch devices or use the month and year controls to jump further ahead.',
     section: 'calendar',
     target: '#tour-calendar-tools',
   },
   {
-    title: 'Move between sections',
-    detail: 'Use the navigation to open your Dashboard, Tasks, Notes, Calendar, Important Links, and Focus Timer.',
-    section: 'dashboard',
-    target: '[data-tour="main-navigation"]',
+    title: 'Receive calendar reminders',
+    detail: 'Enable background notifications separately on each computer, phone, or tablet. After permission is granted, reminders can arrive even when Tasks is not open.',
+    section: 'calendar',
+    target: '#tour-calendar-tools',
   },
   {
-    title: 'Account security and exports',
-    detail: 'Open your account settings to change your display name or password and download a JSON copy of your data. Use Forgot password on the sign-in page if you lose access, and select Help to replay this guide.',
+    title: 'Save important links',
+    detail: 'Use Links as a small personal bookmark library for frequently used websites, documents, course pages, or services. Give each link a meaningful title.',
+    section: 'links',
+  },
+  {
+    title: 'Focus on one thing',
+    detail: 'Open Focus, drag around the circular dial or use the controls to choose 1–90 minutes, then start the countdown. Pause or reset whenever your plan changes.',
+    section: 'focus',
+    target: '.focus-card',
+  },
+  {
+    title: 'Read the daily U.S. market brief',
+    detail: 'Select Market News beside Help to open Market Daily News. Each dated briefing explains the latest completed U.S. session, major index moves, market drivers, important company news, and what to watch next.',
+    section: 'dashboard',
+    target: '#tour-market-news',
+  },
+  {
+    title: 'Account and security',
+    detail: 'Open Account Settings from your name to update your display name, change your password, or sign out. Use Forgot password on the sign-in page if you lose access.',
     section: 'dashboard',
     target: '#tour-account-actions',
+  },
+  {
+    title: 'Export and analyse your data',
+    detail: 'Account Settings can download tasks, subtasks, notes, links, and calendar events as JSON. Keep it as a backup or give it to ChatGPT to prioritise work, find overdue tasks, organise notes, and prepare a weekly plan.',
+    section: 'dashboard',
+    target: '#tour-account-actions',
+  },
+  {
+    title: 'Move around and get help',
+    detail: 'Use the sidebar on a computer or the bottom navigation on a phone and tablet. Select Help whenever you want to replay this guide. Your changes sync through your account across supported devices.',
+    section: 'dashboard',
+    target: '[data-tour="main-navigation"]',
   },
 ]
 
@@ -159,7 +188,7 @@ export function OnboardingTour({ open, onNavigate, onComplete }: OnboardingTourP
         <span className="tour-icon"><CheckCircle2 size={24} /></span>
         <h2 id="tour-title">{step.title}</h2>
         <p>{step.detail}</p>
-        <div className="tour-progress" aria-hidden="true">
+        <div className="tour-progress" style={{ gridTemplateColumns: `repeat(${steps.length}, 1fr)` }} aria-hidden="true">
           {steps.map((_, index) => <span key={index} className={index <= stepIndex ? 'active' : ''} />)}
         </div>
         <div className="tour-actions">
