@@ -106,10 +106,9 @@ export function Login() {
         <div className="login-copy">
           <p className="eyebrow">Your personal workspace</p>
           <h1>Keep your work clear and your day considered.</h1>
-          <p>Notes, priorities, important links, and schedules—organised in one calm place.</p>
+          <p>Notes, priorities, important links, and schedules</p>
         </div>
         <div className="login-meta">
-          <div className="privacy-note"><ShieldCheck size={20} /><span>Each account has a private, separate workspace.</span></div>
           <a className="login-instagram" href="https://www.instagram.com/_.ikkyu._/" target="_blank" rel="noreferrer" aria-label="Open Instagram profile @_.ikkyu._">
             <Instagram size={17} />ig: <span>@_.ikkyu._</span>
           </a>
