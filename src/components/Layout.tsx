@@ -5,7 +5,6 @@ import {
   CircleHelp,
   Download,
   ExternalLink,
-  Instagram,
   KeyRound,
   LayoutDashboard,
   Link2,
@@ -214,11 +213,6 @@ export function Layout({
           </div>
         </header>
         <main className="content">{children}</main>
-        <footer className="workspace-footer">
-          <a href="https://www.instagram.com/_.ikkyu._/" target="_blank" rel="noreferrer" aria-label="Open Instagram profile @_.ikkyu._">
-            <Instagram size={15} />ig: <span>@_.ikkyu._</span>
-          </a>
-        </footer>
       </div>
 
       <nav className="mobile-nav" aria-label="Mobile navigation" data-tour="main-navigation">

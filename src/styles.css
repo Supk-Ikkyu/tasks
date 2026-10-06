@@ -88,10 +88,6 @@ code { padding: 0.14em 0.38em; border: 1px solid var(--border); border-radius: 6
 .theme-toggle:hover, .secondary-button:hover { border-color: var(--primary); }
 .app-switch-link { text-decoration: none; }
 .content { width: min(1480px, 100%); flex: 1; margin: 0 auto; padding: 8px clamp(24px, 4vw, 54px) 56px; }
-.workspace-footer { display: flex; justify-content: center; padding: 8px 24px 30px; color: var(--muted); font-size: 0.75rem; }
-.workspace-footer a { display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
-.workspace-footer a:hover { color: var(--primary); }
-.workspace-footer span { color: var(--text); }
 .primary-button, .secondary-button { min-height: 43px; padding: 10px 16px; border: 1px solid transparent; font-size: 0.9rem; text-decoration: none; }
 .primary-button { background: var(--primary); color: var(--surface); }
 :root[data-theme="dark"] .primary-button { color: #15202b; }
@@ -169,7 +165,7 @@ code { padding: 0.14em 0.38em; border: 1px solid var(--border); border-radius: 6
 .task-content { min-width: 0; }
 .task-title-row { display: flex; align-items: center; gap: 10px; }
 .task-title-row h3 { min-width: 0; margin: 1px 0 6px; overflow: hidden; font-size: 0.98rem; text-overflow: ellipsis; }
-.task-content > p { margin: 3px 0 11px; color: var(--muted); font-size: 0.86rem; line-height: 1.55; white-space: pre-wrap; }
+.task-content > p { max-width: 100%; margin: 3px 0 11px; overflow-wrap: anywhere; color: var(--muted); font-size: 0.86rem; line-height: 1.55; white-space: pre-wrap; word-break: break-word; }
 .task-meta { display: flex; flex-wrap: wrap; gap: 13px; color: var(--muted); font-size: 0.76rem; }
 .task-meta > span { display: inline-flex; align-items: center; gap: 5px; }
 .status-text { display: inline-flex; align-items: center; gap: 4px; color: var(--primary); font-weight: 700; }
@@ -341,6 +337,11 @@ input:disabled { cursor: not-allowed; opacity: 0.68; }
 .login-copy > p:last-child { max-width: 570px; margin: 0; color: #5d646a; font-size: 1.02rem; line-height: 1.75; }
 :root[data-theme="dark"] .login-copy > p:last-child { color: #bcc6ce; }
 .privacy-note { display: flex; width: max-content; max-width: 100%; align-items: center; gap: 10px; padding: 11px 14px; border: 1px solid rgba(37, 48, 68, 0.16); border-radius: 12px; background: rgba(255, 255, 255, 0.28); font-size: 0.82rem; }
+.login-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.login-instagram { display: inline-flex; min-height: 42px; align-items: center; gap: 7px; padding: 10px 13px; border: 1px solid rgba(37, 48, 68, 0.16); border-radius: 12px; background: rgba(255, 255, 255, 0.28); color: inherit; font-size: 0.8rem; text-decoration: none; transition: background 150ms ease, transform 150ms ease; }
+.login-instagram:hover { background: rgba(255, 255, 255, 0.46); transform: translateY(-1px); }
+.login-instagram:active { transform: scale(0.97); }
+.login-instagram span { font-weight: 750; }
 .login-panel { display: grid; place-items: center; padding: 32px; background: var(--surface); }
 .login-form { width: min(430px, 100%); }
 .auth-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg); }
